@@ -1,7 +1,9 @@
-# Enforce HTTPS
+# Enforce HTTPS (compatible with ngrok/reverse proxies)
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteCond %{HTTPS} off
+    # If connection is not already HTTPS and proxy didn't forward HTTPS, redirect
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 </IfModule>
 

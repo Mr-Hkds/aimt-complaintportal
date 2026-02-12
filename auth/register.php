@@ -1,10 +1,10 @@
 <?php
-require_once __DIR__.'/../includes/config.php';
-require_once __DIR__.'/../includes/functions.php';
+require_once __DIR__ . '/../includes/config.php';
+require_once __DIR__ . '/../includes/functions.php';
 
-$roles = ['student','faculty','nonteaching','technician','outsourced_vendor'];
-$categories = ['mess','carpenter','wifi','housekeeping','plumber','electrician','laundry','ac'];
-$vendor_types = ['mess','cafeteria','arboriculture','security','housekeeping'];
+$roles = ['student', 'faculty', 'nonteaching', 'technician', 'outsourced_vendor'];
+$categories = ['mess', 'carpenter', 'wifi', 'housekeeping', 'plumber', 'electrician', 'laundry', 'ac'];
+$vendor_types = ['mess', 'cafeteria', 'arboriculture', 'security', 'housekeeping'];
 $errors = [];
 $success = false;
 
@@ -99,6 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -146,7 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             content: '';
             position: fixed;
             inset: 0;
-            background-image: 
+            background-image:
                 radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
                 radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
             animation: backgroundShift 15s ease-in-out infinite alternate;
@@ -154,8 +155,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         @keyframes backgroundShift {
-            0% { transform: scale(1); }
-            100% { transform: scale(1.1); }
+            0% {
+                transform: scale(1);
+            }
+
+            100% {
+                transform: scale(1.1);
+            }
         }
 
         .register-container {
@@ -171,8 +177,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
         .register-header {
@@ -263,9 +276,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
         }
 
         button[type="submit"] {
@@ -315,6 +338,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 transform: scale(0, 0);
                 opacity: 0.5;
             }
+
             100% {
                 transform: scale(20, 20);
                 opacity: 0;
@@ -373,10 +397,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     </style>
 </head>
+
 <body>
     <div class="register-container">
         <div class="register-header">
-            <img src="/complaint_portal/assets/images/aimt-logo.png" alt="AIMT Logo">
+            <img src="assets/images/aimt-logo.png" alt="AIMT Logo">
             <h1>Create Account</h1>
             <p>Join the AIMT Complaint Portal</p>
         </div>
@@ -394,16 +419,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
             <div class="form-group">
                 <label for="full_name">Full Name</label>
-                <input type="text" id="full_name" name="full_name" required 
-                    value="<?= htmlspecialchars($_POST['full_name'] ?? '') ?>"
-                    placeholder="Enter your full name">
+                <input type="text" id="full_name" name="full_name" required
+                    value="<?= htmlspecialchars($_POST['full_name'] ?? '') ?>" placeholder="Enter your full name">
             </div>
 
             <div class="form-group">
                 <label for="phone">Phone</label>
-                <input type="text" id="phone" maxlength="10" name="phone" required 
-                    value="<?= htmlspecialchars($_POST['phone'] ?? '') ?>"
-                    placeholder="Enter your phone number">
+                <input type="text" id="phone" maxlength="10" name="phone" required
+                    value="<?= htmlspecialchars($_POST['phone'] ?? '') ?>" placeholder="Enter your phone number">
                 <span id="phone-status" style="font-size:0.85em;display:block;margin-top:0.25em;"></span>
             </div>
 
@@ -412,7 +435,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <select id="role" name="role" required onchange="showSpec()">
                     <option value="">Select your role</option>
                     <?php foreach ($roles as $r): ?>
-                        <option value="<?= $r ?>" <?= (($_POST['role'] ?? '')==$r)?'selected':'' ?>>
+                        <option value="<?= $r ?>" <?= (($_POST['role'] ?? '') == $r) ? 'selected' : '' ?>>
                             <?= $r === 'outsourced_vendor' ? 'Outsourced Vendor' : ucfirst($r) ?>
                         </option>
                     <?php endforeach; ?>
@@ -424,7 +447,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <select id="vendor_type" name="vendor_type">
                     <option value="">Select vendor type</option>
                     <?php foreach ($vendor_types as $vt): ?>
-                        <option value="<?= $vt ?>" <?= (($_POST['vendor_type'] ?? '')==$vt)?'selected':'' ?>>
+                        <option value="<?= $vt ?>" <?= (($_POST['vendor_type'] ?? '') == $vt) ? 'selected' : '' ?>>
                             <?= ucfirst($vt) ?>
                         </option>
                     <?php endforeach; ?>
@@ -436,7 +459,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <select id="specialization" name="specialization">
                     <option value="">Select specialization</option>
                     <?php foreach ($categories as $cat): ?>
-                        <option value="<?= $cat ?>" <?= (($_POST['specialization'] ?? '')==$cat)?'selected':'' ?>>
+                        <option value="<?= $cat ?>" <?= (($_POST['specialization'] ?? '') == $cat) ? 'selected' : '' ?>>
                             <?= ucfirst($cat) ?>
                         </option>
                     <?php endforeach; ?>
@@ -445,24 +468,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="form-group">
                 <label for="special_code">Special Code</label>
-                <input type="text" id="special_code" name="special_code" required 
-                    value="<?= htmlspecialchars($_POST['special_code'] ?? '') ?>"
-                    placeholder="Enter your special code">
+                <input type="text" id="special_code" name="special_code" required
+                    value="<?= htmlspecialchars($_POST['special_code'] ?? '') ?>" placeholder="Enter your special code">
             </div>
 
             <div class="form-group">
                 <label for="username">Username</label>
-                <input type="text" id="username" name="username" required 
-                    value="<?= htmlspecialchars($_POST['username'] ?? '') ?>"
-                    placeholder="Choose a username">
+                <input type="text" id="username" name="username" required
+                    value="<?= htmlspecialchars($_POST['username'] ?? '') ?>" placeholder="Choose a username">
                 <span id="username-status" style="font-size:0.85em;display:block;margin-top:0.25em;"></span>
             </div>
 
             <div class="form-group">
                 <label for="password">Password</label>
                 <div class="password-container">
-                    <input type="password" id="password" name="password" required 
-                        placeholder="Create a password">
+                    <input type="password" id="password" name="password" required placeholder="Create a password">
                     <span class="password-toggle" onclick="togglePassword('password')">
                         <span class="material-icons">visibility</span>
                     </span>
@@ -472,7 +492,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="form-group">
                 <label for="confirm_password">Confirm Password</label>
                 <div class="password-container">
-                    <input type="password" id="confirm_password" name="confirm_password" required 
+                    <input type="password" id="confirm_password" name="confirm_password" required
                         placeholder="Confirm your password">
                     <span class="password-toggle" onclick="togglePassword('confirm_password')">
                         <span class="material-icons">visibility</span>
@@ -484,8 +504,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <label for="hostel_type">Hostel Type</label>
                 <select id="hostel_type" name="hostel_type">
                     <option value="">Select hostel</option>
-                    <option value="boys" <?= (($_POST['hostel_type'] ?? '')=='boys')?'selected':'' ?>>Boys</option>
-                    <option value="girls" <?= (($_POST['hostel_type'] ?? '')=='girls')?'selected':'' ?>>Girls</option>
+                    <option value="boys" <?= (($_POST['hostel_type'] ?? '') == 'boys') ? 'selected' : '' ?>>Boys</option>
+                    <option value="girls" <?= (($_POST['hostel_type'] ?? '') == 'girls') ? 'selected' : '' ?>>Girls</option>
                 </select>
             </div>
 
@@ -508,7 +528,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         function togglePassword(fieldId) {
             const field = document.getElementById(fieldId);
             const icon = field.nextElementSibling.querySelector('.material-icons');
-            
+
             if (field.type === 'password') {
                 field.type = 'text';
                 icon.textContent = 'visibility_off';
@@ -524,15 +544,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 showFieldStatus(field, '');
                 return;
             }
-            fetch('/complaint_portal/auth/validate_unique.php', {
+            fetch('auth/validate_unique.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: encodeURI('field=' + field + '&value=' + value)
             })
-            .then(response => response.json())
-            .then(data => {
-                showFieldStatus(field, data.unique ? '' : (field === 'username' ? 'Username already exists.' : 'Phone number already exists.'));
-            });
+                .then(response => response.json())
+                .then(data => {
+                    showFieldStatus(field, data.unique ? '' : (field === 'username' ? 'Username already exists.' : 'Phone number already exists.'));
+                });
         }
 
         function showFieldStatus(field, message) {
@@ -550,22 +570,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             button.disabled = !!(usernameStatus || phoneStatus);
         }
 
-        document.getElementById('username').addEventListener('input', function() {
+        document.getElementById('username').addEventListener('input', function () {
             checkFieldUnique('username', this.value.trim());
         });
-        document.getElementById('phone').addEventListener('input', function() {
+        document.getElementById('phone').addEventListener('input', function () {
             checkFieldUnique('phone', this.value.trim());
         });
 
         // Add loading state to form submission
-        document.querySelector('form').addEventListener('submit', function(e) {
+        document.querySelector('form').addEventListener('submit', function (e) {
             const button = this.querySelector('button[type="submit"]');
             button.disabled = true;
             button.innerHTML = '<span class="material-icons animate-spin">refresh</span> Creating account...';
         });
 
         // Initialize specialization visibility
-        window.onload = function() {
+        window.onload = function () {
             showSpec();
             // Initial check for prefilled values
             checkFieldUnique('username', document.getElementById('username').value.trim());
@@ -573,4 +593,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         };
     </script>
 </body>
-</html> 
+
+</html>

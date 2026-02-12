@@ -211,7 +211,7 @@
     <footer>
         <div class="footer-content">
             <div class="footer-left">
-                <img src="/complaint_portal/assets/images/aimt-logo.png" alt="AIMT" class="footer-logo">
+                <img src="assets/images/aimt-logo.png" alt="AIMT" class="footer-logo">
                 <div class="copyright">
                     © <?php echo date('Y'); ?> Army Institute of Management and Technology, Greater Noida
                 </div>
@@ -221,7 +221,7 @@
                 <span>Designed & Developed By</span>
                 <div class="divider"></div>
                 <div class="developer">
-                    <img src="/complaint_portal/assets/images/aimt-logo.png" alt="AIMT">
+                    <img src="assets/images/aimt-logo.png" alt="AIMT">
                     <span>Student of AIMT</span>
                 </div>
             </div>

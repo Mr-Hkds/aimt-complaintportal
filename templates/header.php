@@ -11,7 +11,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
     <title>Complaint Management Portal - AIMT</title>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/complaint_portal/assets/images/aimt-logo.png">
+    <link rel="icon" type="image/png" href="assets/images/aimt-logo.png">
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,7 +19,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Styles -->
-    <link rel="stylesheet" href="/complaint_portal/assets/css/portal.css">
+    <link rel="stylesheet" href="assets/css/portal.css">
     
     <!-- Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -30,7 +30,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     
     <!-- Error Handler Script -->
-    <script src="/complaint_portal/assets/js/error-handler.js"></script>
+    <script src="assets/js/error-handler.js"></script>
 
     <!-- Theme System -->
     <style>
@@ -180,7 +180,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
     <header class="portal-header">
         <div class="header-container">
             <div class="header-brand">
-                <img src="/complaint_portal/assets/images/aimt-logo.png" alt="AIMT Logo" class="header-logo">
+                <img src="assets/images/aimt-logo.png" alt="AIMT Logo" class="header-logo">
                 <div>
                     <h1 class="header-title">Army Institute of Management & Technology</h1>
                     <p class="header-subtitle">Complaint Management Portal</p>
@@ -189,39 +189,39 @@ if (session_status() === PHP_SESSION_NONE) session_start();
             <nav class="header-nav">
                 <?php if (isset($_SESSION['role'])): ?>
                     <?php if ($_SESSION['role'] === 'superadmin'): ?>
-                        <a href="/complaint_portal/superadmin/dashboard.php">
+                        <a href="superadmin/dashboard.php">
                             <span class="material-icons">dashboard</span>
                             <span>Dashboard</span>
                         </a>
-                        <a href="/complaint_portal/superadmin/register_codes.php">
+                        <a href="superadmin/register_codes.php">
                             <span class="material-icons">key</span>
                             <span>Generate Codes</span>
                         </a>
-                        <a href="/complaint_portal/auth/logout.php">
+                        <a href="auth/logout.php">
                             <span class="material-icons">logout</span>
                             <span>Logout</span>
                         </a>
                     <?php elseif ($_SESSION['role'] === 'technician'): ?>
-                        <a href="/complaint_portal/technician/dashboard.php">
+                        <a href="technician/dashboard.php">
                             <span class="material-icons">dashboard</span>
                             <span>Dashboard</span>
                         </a>
-                        <a href="/complaint_portal/auth/logout.php">
+                        <a href="auth/logout.php">
                             <span class="material-icons">logout</span>
                             <span>Logout</span>
                         </a>
                     <?php elseif (in_array($_SESSION['role'], ['student','faculty','nonteaching'])): ?>
-                        <a href="/complaint_portal/user/dashboard.php">
+                        <a href="user/dashboard.php">
                             <span class="material-icons">dashboard</span>
                             <span>Dashboard</span>
                         </a>
-                        <a href="/complaint_portal/auth/logout.php">
+                        <a href="auth/logout.php">
                             <span class="material-icons">logout</span>
                             <span>Logout</span>
                         </a>
                     <?php endif; ?>
                 <?php else: ?>
-                    <a href="/complaint_portal/index.php">
+                    <a href="index.php">
                         <span class="material-icons">home</span>
                         <span>Home</span>
                     </a>

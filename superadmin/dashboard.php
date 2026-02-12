@@ -646,14 +646,6 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
                 <div class="px-2 py-1 mt-4">
                     <div class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">System Operations</div>
                 </div>
-                <a href="auto_assignment.php" class="sidebar-link flex items-center px-4 py-3 rounded-xl">
-                    <i class="lucide-zap mr-3 text-slate-400"></i>
-                    <span>Auto Assignment</span>
-                </a>
-                <a href="system_monitoring.php" class="sidebar-link flex items-center px-4 py-3 rounded-xl">
-                    <i class="lucide-activity mr-3 text-slate-400"></i>
-                    <span>System Monitoring</span>
-                </a>
                 <a href="technician_status.php" class="sidebar-link flex items-center px-4 py-3 rounded-xl">
                     <i class="lucide-toggle-left mr-3 text-slate-400"></i>
                     <span>Technician Status</span>

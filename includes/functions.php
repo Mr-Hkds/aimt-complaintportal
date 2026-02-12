@@ -725,10 +725,23 @@ function get_assignment_statistics() {
             SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END) as resolved_count
         FROM complaints
     ");
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $complaint_stats = $result->fetch_assoc();
-    $stmt->close();
+    if ($stmt) {
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $complaint_stats = $result ? ($result->fetch_assoc() ?: []) : [];
+        $stmt->close();
+    } else {
+        $complaint_stats = [];
+    }
+    // Defaults if query failed
+    $complaint_stats = array_merge([
+        'total_complaints' => 0,
+        'unassigned_count' => 0,
+        'assigned_count' => 0,
+        'pending_count' => 0,
+        'in_progress_count' => 0,
+        'resolved_count' => 0,
+    ], $complaint_stats);
     
     // Get hostel issue statistics
     $stmt = $mysqli->prepare("
@@ -741,10 +754,23 @@ function get_assignment_statistics() {
             SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END) as hostel_resolved_count
         FROM hostel_issues
     ");
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $hostel_stats = $result->fetch_assoc();
-    $stmt->close();
+    if ($stmt) {
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $hostel_stats = $result ? ($result->fetch_assoc() ?: []) : [];
+        $stmt->close();
+    } else {
+        $hostel_stats = [];
+    }
+    // Defaults if query failed
+    $hostel_stats = array_merge([
+        'total_hostel_issues' => 0,
+        'unassigned_hostel_count' => 0,
+        'assigned_hostel_count' => 0,
+        'not_assigned_count' => 0,
+        'hostel_in_progress_count' => 0,
+        'hostel_resolved_count' => 0,
+    ], $hostel_stats);
     
     // Get technician workload distribution for complaints with online status
     $stmt = $mysqli->prepare("
@@ -766,18 +792,23 @@ function get_assignment_statistics() {
         GROUP BY u.id, u.full_name, u.specialization, u.is_online
         ORDER BY (assigned_complaints + assigned_hostel_issues) DESC
     ");
-    $stmt->execute();
-    $result = $stmt->get_result();
     $technician_stats = [];
     $total_workload = 0;
     $technician_count = 0;
-    
-    while ($row = $result->fetch_assoc()) {
-        $total_workload += $row['assigned_complaints'] + $row['assigned_hostel_issues'];
-        $technician_count++;
-        $technician_stats[] = $row;
+    if ($stmt) {
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $assignedComplaints = isset($row['assigned_complaints']) ? (int)$row['assigned_complaints'] : 0;
+                $assignedHostel = isset($row['assigned_hostel_issues']) ? (int)$row['assigned_hostel_issues'] : 0;
+                $total_workload += $assignedComplaints + $assignedHostel;
+                $technician_count++;
+                $technician_stats[] = $row;
+            }
+        }
+        $stmt->close();
     }
-    $stmt->close();
     
     // Calculate average workload
     $average_workload = $technician_count > 0 ? $total_workload / $technician_count : 0;
