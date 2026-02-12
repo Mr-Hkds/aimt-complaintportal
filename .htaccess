@@ -21,7 +21,7 @@
 # Enable rewrite engine
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /complaint_portal/
+    RewriteBase /
 </IfModule>
 
 # Block access to sensitive files
@@ -78,5 +78,5 @@ Options -Indexes
     php_value session.gc_maxlifetime 1440
 </IfModule> 
 
-ErrorDocument 404 /complaint_portal/error.php
-ErrorDocument 500 /complaint_portal/error.php 
+ErrorDocument 404 /error.php
+ErrorDocument 500 /error.php 
