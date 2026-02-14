@@ -22,7 +22,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Define Base URL for unified path resolution
-$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') ? 'https://' : 'http://';
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 // Get the directory containing this config file and go up one level
 $script_name = $_SERVER['SCRIPT_NAME'] ?? '';

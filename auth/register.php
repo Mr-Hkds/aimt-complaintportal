@@ -9,14 +9,18 @@ $errors = [];
 $success = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Validate CSRF token
-    if (!isset($_POST['csrf_token']) || !validate_csrf_token($_POST['csrf_token'])) {
+    // Rate limiting
+    if (is_rate_limited('registration', 3, 60)) {
+        $errors[] = 'Too many registration attempts. Please try again later.';
+    } else if (!isset($_POST['csrf_token']) || !validate_csrf_token($_POST['csrf_token'])) {
         $errors[] = 'Invalid request. Please try again.';
     } else {
         $full_name = trim($_POST['full_name'] ?? '');
+        $email = trim($_POST['email'] ?? '');
         $phone = trim($_POST['phone'] ?? '');
         $role = $_POST['role'] ?? '';
         $special_code = trim($_POST['special_code'] ?? '');
+
         // If outsourced_vendor, get vendor type as specialization
         if ($role === 'outsourced_vendor') {
             $specialization = $_POST['vendor_type'] ?? '';
@@ -30,9 +34,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $confirm_password = $_POST['confirm_password'] ?? '';
         $hostel_type = ($role === 'student') ? ($_POST['hostel_type'] ?? '') : null;
 
-        if (!$full_name || !$phone || !$role || !$special_code || !$username || !$password || !$confirm_password) {
+        if (!$full_name || !$email || !$phone || !$role || !$username || !$password || !$confirm_password) {
             $errors[] = 'All fields are required.';
         }
+
+        // Email validation
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'Invalid email address.';
+        } else {
+            $email_parts = explode('@', $email);
+            $domain = end($email_parts);
+            if ($domain !== CAMPUS_EMAIL_DOMAIN && !$special_code) {
+                $errors[] = 'Outside emails require a special code.';
+            }
+        }
+
         if (!in_array($role, $roles)) {
             $errors[] = 'Invalid role.';
         }
@@ -45,54 +61,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($password !== $confirm_password) {
             $errors[] = 'Passwords do not match.';
         }
+        if (strlen($password) < 8) {
+            $errors[] = 'Password must be at least 8 characters long.';
+        }
         if ($role === 'student' && !$hostel_type) {
             $errors[] = 'Hostel type required for students.';
         }
-        // Validate special code
-        if ($role === 'technician') {
-            $stmt = $mysqli->prepare("SELECT * FROM special_codes WHERE code = ? AND role = ? AND specialization IS NULL");
-            $stmt->bind_param('ss', $special_code, $role);
-        } else if ($role === 'outsourced_vendor') {
-            $stmt = $mysqli->prepare("SELECT * FROM special_codes WHERE code = ? AND role = ?");
-            $stmt->bind_param('ss', $special_code, $role);
-        } else {
-            $stmt = $mysqli->prepare("SELECT * FROM special_codes WHERE code = ? AND role = ?");
-            $stmt->bind_param('ss', $special_code, $role);
+
+        // Validate special code if provided (optional for campus emails, required for others)
+        if ($special_code) {
+            if ($role === 'technician') {
+                $stmt = $mysqli->prepare("SELECT * FROM special_codes WHERE code = ? AND role = ? AND specialization IS NULL");
+                $stmt->bind_param('ss', $special_code, $role);
+            } else {
+                $stmt = $mysqli->prepare("SELECT * FROM special_codes WHERE code = ? AND role = ?");
+                $stmt->bind_param('ss', $special_code, $role);
+            }
+            $stmt->execute();
+            if ($stmt->get_result()->num_rows === 0) {
+                $errors[] = 'Invalid code.';
+            }
+            $stmt->close();
         }
-        $stmt->execute();
-        $result = $stmt->get_result();
-        if ($result->num_rows === 0) {
-            $errors[] = 'Invalid code.';
+
+        // Check unique fields
+        $checks = ['username' => 'Username', 'phone' => 'Phone number', 'email' => 'Email'];
+        foreach ($checks as $field => $label) {
+            $stmt = $mysqli->prepare("SELECT id FROM users WHERE $field = ?");
+            $stmt->bind_param('s', $$field);
+            $stmt->execute();
+            if ($stmt->get_result()->num_rows > 0) {
+                $errors[] = "$label already exists.";
+            }
+            $stmt->close();
         }
-        $stmt->close();
-        // Check username unique
-        $stmt = $mysqli->prepare("SELECT id FROM users WHERE username = ?");
-        $stmt->bind_param('s', $username);
-        $stmt->execute();
-        $stmt->store_result();
-        if ($stmt->num_rows > 0) {
-            $errors[] = 'Username already exists.';
-        }
-        $stmt->close();
-        // Check phone unique
-        $stmt = $mysqli->prepare("SELECT id FROM users WHERE phone = ?");
-        $stmt->bind_param('s', $phone);
-        $stmt->execute();
-        $stmt->store_result();
-        if ($stmt->num_rows > 0) {
-            $errors[] = 'Phone number already exists.';
-        }
-        $stmt->close();
+
         if (!$errors) {
             $hash = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $mysqli->prepare("INSERT INTO users (full_name, phone, role, special_code, specialization, username, password_hash, hostel_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param('ssssssss', $full_name, $phone, $role, $special_code, $specialization, $username, $hash, $hostel_type);
+            $status = 'pending';
+            $stmt = $mysqli->prepare("INSERT INTO users (full_name, email, phone, role, special_code, specialization, username, password_hash, hostel_type, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param('ssssssssss', $full_name, $email, $phone, $role, $special_code, $specialization, $username, $hash, $hostel_type, $status);
             if ($stmt->execute()) {
+                log_security_action('registration_success', $username, "Email: $email");
                 redirect('login.php?registered=1');
             } else {
                 $errors[] = 'Something went wrong. Please try again.';
+                log_security_action('registration_failed', $username, $mysqli->error);
             }
             $stmt->close();
+        } else {
+            log_security_action('registration_attempt_blocked', $username, implode(', ', $errors));
         }
     }
 }
@@ -424,6 +442,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div class="form-group">
+                <label for="email">Campus Email</label>
+                <input type="email" id="email" name="email" required
+                    value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" placeholder="example@<?= CAMPUS_EMAIL_DOMAIN ?>">
+                <span id="email-status" style="font-size:0.85em;display:block;margin-top:0.25em;"></span>
+            </div>
+
+            <div class="form-group">
                 <label for="phone">Phone</label>
                 <input type="text" id="phone" maxlength="10" name="phone" required
                     value="<?= htmlspecialchars($_POST['phone'] ?? '') ?>" placeholder="Enter your phone number">
@@ -505,7 +530,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <select id="hostel_type" name="hostel_type">
                     <option value="">Select hostel</option>
                     <option value="boys" <?= (($_POST['hostel_type'] ?? '') == 'boys') ? 'selected' : '' ?>>Boys</option>
-                    <option value="girls" <?= (($_POST['hostel_type'] ?? '') == 'girls') ? 'selected' : '' ?>>Girls</option>
+                    <option value="girls" <?= (($_POST['hostel_type'] ?? '') == 'girls') ? 'selected' : '' ?>>Girls
+                    </option>
                 </select>
             </div>
 
