@@ -1,16 +1,24 @@
 <?php
-require_once __DIR__.'/../includes/config.php';
+/**
+ * AIMT Complaint Portal - Secure Logout
+ */
 
-// Preserve logout message if it exists
-$logout_message = $_SESSION['logout_message'] ?? '';
+require_once __DIR__ . '/../includes/auth_helper.php';
 
-session_unset();
+$username = $_SESSION['username'] ?? 'unknown';
+log_security_action('logout', $username);
+
+// Clear all session variables
+$_SESSION = [];
+
+// Destroy the session cookie if it exists
+if (isset($_COOKIE[session_name()])) {
+    setcookie(session_name(), '', time() - 3600, '/');
+}
+
+// Destroy the session
 session_destroy();
 
-// Redirect to login page with logout message
-if (!empty($logout_message)) {
-    header('Location: login.php?logout_message=' . urlencode($logout_message));
-} else {
-    header('Location: login.php');
-}
-exit; 
+// Redirect to login
+redirect('login.php?logout=1');
+?>

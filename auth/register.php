@@ -1,119 +1,51 @@
 <?php
-require_once __DIR__ . '/../includes/config.php';
-require_once __DIR__ . '/../includes/functions.php';
+/**
+ * AIMT Complaint Portal - Premium Multi-Step Registration
+ */
 
-$roles = ['student', 'faculty', 'nonteaching', 'technician', 'outsourced_vendor'];
-$categories = ['mess', 'carpenter', 'wifi', 'housekeeping', 'plumber', 'electrician', 'laundry', 'ac'];
-$vendor_types = ['mess', 'cafeteria', 'arboriculture', 'security', 'housekeeping'];
+require_once __DIR__ . '/../includes/auth_helper.php';
+
 $errors = [];
 $success = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Rate limiting
-    if (is_rate_limited('registration', 3, 60)) {
-        $errors[] = 'Too many registration attempts. Please try again later.';
-    } else if (!isset($_POST['csrf_token']) || !validate_csrf_token($_POST['csrf_token'])) {
-        $errors[] = 'Invalid request. Please try again.';
+    if (!validate_csrf_token($_POST['csrf_token'] ?? '')) {
+        $errors[] = "Invalid security token. Please refresh and try again.";
     } else {
-        $full_name = trim($_POST['full_name'] ?? '');
-        $email = trim($_POST['email'] ?? '');
-        $phone = trim($_POST['phone'] ?? '');
-        $role = $_POST['role'] ?? '';
-        $special_code = trim($_POST['special_code'] ?? '');
+        // Collect all data from POST
+        $data = [
+            'full_name' => trim($_POST['full_name'] ?? ''),
+            'email' => trim($_POST['email'] ?? ''),
+            'phone' => trim($_POST['phone'] ?? ''),
+            'role' => $_POST['role'] ?? '',
+            'special_code' => trim($_POST['special_code'] ?? ''),
+            'username' => trim($_POST['username'] ?? ''),
+            'password' => $_POST['password'] ?? '',
+            'confirm_password' => $_POST['confirm_password'] ?? '',
+            'hostel_type' => $_POST['hostel_type'] ?? null,
+            'specialization' => $_POST['specialization'] ?? $_POST['vendor_type'] ?? null
+        ];
 
-        // If outsourced_vendor, get vendor type as specialization
-        if ($role === 'outsourced_vendor') {
-            $specialization = $_POST['vendor_type'] ?? '';
-        } else if ($role === 'technician') {
-            $specialization = $_POST['specialization'] ?? '';
+        // Basic validation before calling helper
+        if ($data['password'] !== $data['confirm_password']) {
+            $errors[] = "Passwords do not match.";
+        } elseif (strlen($data['password']) < 8) {
+            $errors[] = "Password must be at least 8 characters long.";
         } else {
-            $specialization = null;
-        }
-        $username = trim($_POST['username'] ?? '');
-        $password = $_POST['password'] ?? '';
-        $confirm_password = $_POST['confirm_password'] ?? '';
-        $hostel_type = ($role === 'student') ? ($_POST['hostel_type'] ?? '') : null;
-
-        if (!$full_name || !$email || !$phone || !$role || !$username || !$password || !$confirm_password) {
-            $errors[] = 'All fields are required.';
-        }
-
-        // Email validation
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $errors[] = 'Invalid email address.';
-        } else {
-            $email_parts = explode('@', $email);
-            $domain = end($email_parts);
-            if ($domain !== CAMPUS_EMAIL_DOMAIN && !$special_code) {
-                $errors[] = 'Outside emails require a special code.';
-            }
-        }
-
-        if (!in_array($role, $roles)) {
-            $errors[] = 'Invalid role.';
-        }
-        if ($role === 'technician' && !$specialization) {
-            $errors[] = 'Specialization required for technician.';
-        }
-        if ($role === 'outsourced_vendor' && !$specialization) {
-            $errors[] = 'Vendor type required for outsourced vendor.';
-        }
-        if ($password !== $confirm_password) {
-            $errors[] = 'Passwords do not match.';
-        }
-        if (strlen($password) < 8) {
-            $errors[] = 'Password must be at least 8 characters long.';
-        }
-        if ($role === 'student' && !$hostel_type) {
-            $errors[] = 'Hostel type required for students.';
-        }
-
-        // Validate special code if provided (optional for campus emails, required for others)
-        if ($special_code) {
-            if ($role === 'technician') {
-                $stmt = $mysqli->prepare("SELECT * FROM special_codes WHERE code = ? AND role = ? AND specialization IS NULL");
-                $stmt->bind_param('ss', $special_code, $role);
-            } else {
-                $stmt = $mysqli->prepare("SELECT * FROM special_codes WHERE code = ? AND role = ?");
-                $stmt->bind_param('ss', $special_code, $role);
-            }
-            $stmt->execute();
-            if ($stmt->get_result()->num_rows === 0) {
-                $errors[] = 'Invalid code.';
-            }
-            $stmt->close();
-        }
-
-        // Check unique fields
-        $checks = ['username' => 'Username', 'phone' => 'Phone number', 'email' => 'Email'];
-        foreach ($checks as $field => $label) {
-            $stmt = $mysqli->prepare("SELECT id FROM users WHERE $field = ?");
-            $stmt->bind_param('s', $$field);
-            $stmt->execute();
-            if ($stmt->get_result()->num_rows > 0) {
-                $errors[] = "$label already exists.";
-            }
-            $stmt->close();
-        }
-
-        if (!$errors) {
-            $hash = password_hash($password, PASSWORD_DEFAULT);
-            $status = 'pending';
-            $stmt = $mysqli->prepare("INSERT INTO users (full_name, email, phone, role, special_code, specialization, username, password_hash, hostel_type, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param('ssssssssss', $full_name, $email, $phone, $role, $special_code, $specialization, $username, $hash, $hostel_type, $status);
-            if ($stmt->execute()) {
-                log_security_action('registration_success', $username, "Email: $email");
+            $result = register_user($data);
+            if ($result === true) {
                 redirect('login.php?registered=1');
             } else {
-                $errors[] = 'Something went wrong. Please try again.';
-                log_security_action('registration_failed', $username, $mysqli->error);
+                $errors[] = $result;
             }
-            $stmt->close();
-        } else {
-            log_security_action('registration_attempt_blocked', $username, implode(', ', $errors));
         }
     }
 }
+
+$csrf_token = generate_csrf_token();
+$roles = ['student', 'faculty', 'nonteaching', 'technician', 'outsourced_vendor'];
+$categories = ['mess', 'carpenter', 'wifi', 'housekeeping', 'plumber', 'electrician', 'laundry', 'ac'];
+$vendor_types = ['mess', 'cafeteria', 'arboriculture', 'security', 'housekeeping'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -121,503 +53,486 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - AIMT Complaint Portal</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <title>Create Account | AIMT Complaint Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #1e3a8a;
-            --primary-dark: #1e40af;
-            --secondary: #166534;
-            --accent: #f59e0b;
-            --text: #1f2937;
-            --text-light: #6b7280;
-            --bg: #f8fafc;
-            --bg-card: #ffffff;
-            --error: #dc2626;
-            --success: #059669;
-            --border: #e5e7eb;
-            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
-
         body {
-            min-height: 100vh;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-            position: relative;
+            font-family: 'Outfit', sans-serif;
+            background: radial-gradient(circle at top left, #1a202c, #0d1117);
             overflow-x: hidden;
         }
 
-        /* Animated background */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background-image:
-                radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
-            animation: backgroundShift 15s ease-in-out infinite alternate;
-            z-index: 0;
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        @keyframes backgroundShift {
+        .step-node.active {
+            background: #3b82f6;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+            border-color: #3b82f6;
+        }
+
+        .step-node.completed {
+            background: #10b981;
+            border-color: #10b981;
+        }
+
+        .step-line.active {
+            background: #3b82f6;
+        }
+
+        .role-card.active {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+        }
+
+        .animate-blob {
+            animation: blob 7s infinite;
+        }
+
+        @keyframes blob {
             0% {
-                transform: scale(1);
+                transform: translate(0px, 0px) scale(1);
+            }
+
+            33% {
+                transform: translate(30px, -50px) scale(1.1);
+            }
+
+            66% {
+                transform: translate(-20px, 20px) scale(0.9);
             }
 
             100% {
-                transform: scale(1.1);
+                transform: translate(0px, 0px) scale(1);
             }
         }
 
-        .register-container {
-            width: 100%;
-            max-width: 800px;
-            background: var(--bg-card);
-            border-radius: 1rem;
-            box-shadow: var(--shadow-lg);
-            padding: 2rem;
-            position: relative;
-            z-index: 1;
-            animation: slideUp 0.5s ease-out;
+        .animation-delay-2000 {
+            animation-delay: 2s;
         }
 
-        @keyframes slideUp {
+        .animation-delay-4000 {
+            animation-delay: 4s;
+        }
+
+        .step-panel {
+            display: none;
+            animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .step-panel.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
             from {
-                transform: translateY(20px);
                 opacity: 0;
+                transform: translateX(20px);
             }
 
             to {
-                transform: translateY(0);
                 opacity: 1;
-            }
-        }
-
-        .register-header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .register-header img {
-            width: 80px;
-            height: 80px;
-            margin-bottom: 1rem;
-            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
-        }
-
-        .register-header h1 {
-            color: var(--text);
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        .register-header p {
-            color: var(--text-light);
-            font-size: 0.875rem;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-            position: relative;
-        }
-
-        .form-group label {
-            display: block;
-            color: var(--text);
-            font-size: 0.875rem;
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-        }
-
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 1px solid var(--border);
-            border-radius: 0.5rem;
-            background: var(--bg);
-            color: var(--text);
-            font-size: 0.875rem;
-            transition: all 0.2s ease;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
-        }
-
-        .password-container {
-            position: relative;
-        }
-
-        .password-toggle {
-            position: absolute;
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            cursor: pointer;
-            color: var(--text-light);
-            transition: color 0.2s ease;
-        }
-
-        .password-toggle:hover {
-            color: var(--text);
-        }
-
-        .error-message {
-            background: #fee2e2;
-            color: var(--error);
-            padding: 0.75rem 1rem;
-            border-radius: 0.5rem;
-            font-size: 0.875rem;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            animation: shake 0.5s ease-in-out;
-        }
-
-        @keyframes shake {
-
-            0%,
-            100% {
                 transform: translateX(0);
-            }
-
-            25% {
-                transform: translateX(-5px);
-            }
-
-            75% {
-                transform: translateX(5px);
-            }
-        }
-
-        button[type="submit"] {
-            width: 100%;
-            padding: 0.875rem;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            border: none;
-            border-radius: 0.5rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        button[type="submit"]:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2);
-        }
-
-        button[type="submit"]:active {
-            transform: translateY(0);
-        }
-
-        button[type="submit"]::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 5px;
-            height: 5px;
-            background: rgba(255, 255, 255, 0.5);
-            opacity: 0;
-            border-radius: 100%;
-            transform: scale(1, 1) translate(-50%);
-            transform-origin: 50% 50%;
-        }
-
-        button[type="submit"]:focus:not(:active)::after {
-            animation: ripple 1s ease-out;
-        }
-
-        @keyframes ripple {
-            0% {
-                transform: scale(0, 0);
-                opacity: 0.5;
-            }
-
-            100% {
-                transform: scale(20, 20);
-                opacity: 0;
-            }
-        }
-
-        .login-link {
-            text-align: center;
-            margin-top: 1.5rem;
-            font-size: 0.875rem;
-            color: var(--text-light);
-        }
-
-        .login-link a {
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s ease;
-        }
-
-        .login-link a:hover {
-            color: var(--primary-dark);
-        }
-
-        /* Grid layout for form fields */
-        form {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
-        }
-
-        /* Make certain fields full width */
-        .form-group:nth-last-child(3),
-        .form-group:nth-last-child(2),
-        .form-group:nth-last-child(1) {
-            grid-column: 1 / -1;
-        }
-
-        @media (max-width: 768px) {
-            .register-container {
-                padding: 1.5rem;
-            }
-
-            form {
-                grid-template-columns: 1fr;
-            }
-
-            .register-header img {
-                width: 60px;
-                height: 60px;
-            }
-
-            .register-header h1 {
-                font-size: 1.25rem;
             }
         }
     </style>
 </head>
 
-<body>
-    <div class="register-container">
-        <div class="register-header">
-            <img src="../assets/images/aimt-logo.png" alt="AIMT Logo">
-            <h1>Create Account</h1>
-            <p>Join the AIMT Complaint Portal</p>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <!-- Animated Background Blobs -->
+    <div
+        class="fixed top-0 -left-4 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply opacity-20 filter blur-3xl animate-blob">
+    </div>
+    <div
+        class="fixed top-0 -right-4 w-72 h-72 bg-emerald-500 rounded-full mix-blend-multiply opacity-20 filter blur-3xl animate-blob animation-delay-2000">
+    </div>
+    <div
+        class="fixed -bottom-8 left-20 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply opacity-20 filter blur-3xl animate-blob animation-delay-4000">
+    </div>
+
+    <div class="max-w-2xl w-full glass rounded-3xl p-8 md:p-12 shadow-2xl relative z-10 my-8">
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <h1 class="text-3xl font-bold text-white mb-2">Create Account</h1>
+            <p class="text-gray-400">Join the AIMT Complaint Portal</p>
+        </div>
+
+        <!-- Progress Steps -->
+        <div
+            class="flex items-center justify-between mb-12 relative px-4 text-xs font-semibold uppercase tracking-wider">
+            <div class="flex flex-col items-center gap-2 relative z-10">
+                <div id="step-node-1"
+                    class="step-node active w-10 h-10 rounded-full border-2 border-white/20 flex items-center justify-center text-white bg-[#0d1117] transition-all duration-500">
+                    <span>1</span>
+                </div>
+                <span class="text-gray-400" id="step-label-1">Account</span>
+            </div>
+            <div class="flex-1 h-0.5 bg-white/10 mx-2 -mt-6 relative">
+                <div id="step-line-1" class="step-line absolute h-full bg-blue-600 w-0 transition-all duration-500">
+                </div>
+            </div>
+            <div class="flex flex-col items-center gap-2 relative z-10">
+                <div id="step-node-2"
+                    class="step-node w-10 h-10 rounded-full border-2 border-white/20 flex items-center justify-center text-white bg-[#0d1117] transition-all duration-500">
+                    <span>2</span>
+                </div>
+                <span class="text-gray-400" id="step-label-2">Profile</span>
+            </div>
+            <div class="flex-1 h-0.5 bg-white/10 mx-2 -mt-6 relative">
+                <div id="step-line-2" class="step-line absolute h-full bg-blue-600 w-0 transition-all duration-500">
+                </div>
+            </div>
+            <div class="flex flex-col items-center gap-2 relative z-10">
+                <div id="step-node-3"
+                    class="step-node w-10 h-10 rounded-full border-2 border-white/20 flex items-center justify-center text-white bg-[#0d1117] transition-all duration-500">
+                    <span>3</span>
+                </div>
+                <span class="text-gray-400" id="step-label-3">Security</span>
+            </div>
         </div>
 
         <?php if ($errors): ?>
-            <?php foreach ($errors as $error): ?>
-                <div class="error-message">
-                    <span class="material-icons">error</span>
-                    <?= $error ?>
-                </div>
-            <?php endforeach; ?>
+            <div class="bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-3 rounded-xl mb-8 space-y-1">
+                <?php foreach ($errors as $err): ?>
+                    <div class="flex items-center gap-2 text-sm">
+                        <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                        <span><?= htmlspecialchars($err) ?></span>
+                    </div>
+                <?php endforeach; ?>
+            </div>
         <?php endif; ?>
 
-        <form method="post" autocomplete="off">
-            <input type="hidden" name="csrf_token" value="<?= generate_csrf_token() ?>">
-            <div class="form-group">
-                <label for="full_name">Full Name</label>
-                <input type="text" id="full_name" name="full_name" required
-                    value="<?= htmlspecialchars($_POST['full_name'] ?? '') ?>" placeholder="Enter your full name">
-            </div>
+        <form id="regForm" method="POST" action="" class="space-y-8">
+            <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
 
-            <div class="form-group">
-                <label for="email">Campus Email</label>
-                <input type="email" id="email" name="email" required
-                    value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
-                    placeholder="example@<?= CAMPUS_EMAIL_DOMAIN ?>">
-                <span id="email-status" style="font-size:0.85em;display:block;margin-top:0.25em;"></span>
-            </div>
+            <!-- Step 1: Role & Special Code -->
+            <div id="panel-1" class="step-panel active">
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-4">I am registering as</label>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            <?php foreach ($roles as $role): ?>
+                                <button type="button" onclick="setRole('<?= $role ?>')" data-role="<?= $role ?>"
+                                    class="role-card flex flex-col items-center justify-center p-4 rounded-2xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition-all text-sm gap-2">
+                                    <i data-lucide="<?= $role === 'student' ? 'graduation-cap' : ($role === 'technician' ? 'wrench' : ($role === 'superadmin' ? 'shield-check' : ($role === 'faculty' ? 'book-open' : 'briefcase'))) ?>"
+                                        class="w-6 h-6"></i>
+                                    <span><?= $role === 'outsourced_vendor' ? 'Vendor' : ucfirst($role) ?></span>
+                                </button>
+                            <?php endforeach; ?>
+                        </div>
+                        <input type="hidden" name="role" id="roleInput" required>
+                    </div>
 
-            <div class="form-group">
-                <label for="phone">Phone</label>
-                <input type="text" id="phone" maxlength="10" name="phone" required
-                    value="<?= htmlspecialchars($_POST['phone'] ?? '') ?>" placeholder="Enter your phone number">
-                <span id="phone-status" style="font-size:0.85em;display:block;margin-top:0.25em;"></span>
-            </div>
-
-            <div class="form-group">
-                <label for="role">Role</label>
-                <select id="role" name="role" required onchange="showSpec()">
-                    <option value="">Select your role</option>
-                    <?php foreach ($roles as $r): ?>
-                        <option value="<?= $r ?>" <?= (($_POST['role'] ?? '') == $r) ? 'selected' : '' ?>>
-                            <?= $r === 'outsourced_vendor' ? 'Outsourced Vendor' : ucfirst($r) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <div class="form-group" id="vendor-type-div" style="display:none;">
-                <label for="vendor_type">Vendor Type</label>
-                <select id="vendor_type" name="vendor_type">
-                    <option value="">Select vendor type</option>
-                    <?php foreach ($vendor_types as $vt): ?>
-                        <option value="<?= $vt ?>" <?= (($_POST['vendor_type'] ?? '') == $vt) ? 'selected' : '' ?>>
-                            <?= ucfirst($vt) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <div class="form-group" id="spec-div" style="display:none;">
-                <label for="specialization">Specialization</label>
-                <select id="specialization" name="specialization">
-                    <option value="">Select specialization</option>
-                    <?php foreach ($categories as $cat): ?>
-                        <option value="<?= $cat ?>" <?= (($_POST['specialization'] ?? '') == $cat) ? 'selected' : '' ?>>
-                            <?= ucfirst($cat) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="special_code">Special Code</label>
-                <input type="text" id="special_code" name="special_code" required
-                    value="<?= htmlspecialchars($_POST['special_code'] ?? '') ?>" placeholder="Enter your special code">
-            </div>
-
-            <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" name="username" required
-                    value="<?= htmlspecialchars($_POST['username'] ?? '') ?>" placeholder="Choose a username">
-                <span id="username-status" style="font-size:0.85em;display:block;margin-top:0.25em;"></span>
-            </div>
-
-            <div class="form-group">
-                <label for="password">Password</label>
-                <div class="password-container">
-                    <input type="password" id="password" name="password" required placeholder="Create a password">
-                    <span class="password-toggle" onclick="togglePassword('password')">
-                        <span class="material-icons">visibility</span>
-                    </span>
+                    <div id="group-special-code">
+                        <label for="special_code" class="block text-sm font-medium text-gray-300 mb-2">Registration
+                            Code</label>
+                        <div class="relative">
+                            <input type="text" id="special_code" name="special_code" required
+                                class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-white placeholder-gray-500 focus:outline-none transition-all pl-12"
+                                placeholder="Enter your 4-digit code">
+                            <i data-lucide="key"
+                                class="w-5 h-5 text-gray-500 absolute left-4 top-1/2 -translate-y-1/2"></i>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">Required for all account types to verify affiliation.</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="form-group">
-                <label for="confirm_password">Confirm Password</label>
-                <div class="password-container">
-                    <input type="password" id="confirm_password" name="confirm_password" required
-                        placeholder="Confirm your password">
-                    <span class="password-toggle" onclick="togglePassword('confirm_password')">
-                        <span class="material-icons">visibility</span>
-                    </span>
+            <!-- Step 2: Personal Details -->
+            <div id="panel-2" class="step-panel">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="md:col-span-2">
+                        <label for="full_name" class="block text-sm font-medium text-gray-300 mb-2">Full Name</label>
+                        <div class="relative">
+                            <input type="text" id="full_name" name="full_name" required
+                                class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-white placeholder-gray-500 focus:outline-none transition-all pl-12"
+                                placeholder="John Doe">
+                            <i data-lucide="user"
+                                class="w-5 h-5 text-gray-500 absolute left-4 top-1/2 -translate-y-1/2"></i>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-300 mb-2">Campus Email</label>
+                        <div class="relative">
+                            <input type="email" id="email" name="email" required
+                                class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-white placeholder-gray-500 focus:outline-none transition-all pl-12"
+                                placeholder="username@aimt.edu.in">
+                            <i data-lucide="mail"
+                                class="w-5 h-5 text-gray-500 absolute left-4 top-1/2 -translate-y-1/2"></i>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-gray-300 mb-2">Phone Number</label>
+                        <div class="relative">
+                            <input type="tel" id="phone" name="phone" required maxlength="10"
+                                class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-white placeholder-gray-500 focus:outline-none transition-all pl-12"
+                                placeholder="10-digit number">
+                            <i data-lucide="phone"
+                                class="w-5 h-5 text-gray-500 absolute left-4 top-1/2 -translate-y-1/2"></i>
+                        </div>
+                    </div>
+
+                    <!-- Role Specific: Student -> Hostel -->
+                    <div id="group-hostel" class="hidden md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-300 mb-4">Hostel Type</label>
+                        <div class="grid grid-cols-2 gap-4 text-sm font-medium">
+                            <button type="button" onclick="setHostel('boys')" data-hostel="boys"
+                                class="hostel-card py-4 rounded-2xl border border-white/10 text-gray-400 text-center hover:bg-white/5 transition-all">Boys
+                                Hostel</button>
+                            <button type="button" onclick="setHostel('girls')" data-hostel="girls"
+                                class="hostel-card py-4 rounded-2xl border border-white/10 text-gray-400 text-center hover:bg-white/5 transition-all">Girls
+                                Hostel</button>
+                        </div>
+                        <input type="hidden" name="hostel_type" id="hostelInput">
+                    </div>
+
+                    <!-- Role Specific: Technician -> Specialization -->
+                    <div id="group-tech" class="hidden md:col-span-2">
+                        <label for="specialization"
+                            class="block text-sm font-medium text-gray-300 mb-2">Specialization</label>
+                        <select name="specialization" id="specialization"
+                            class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-white focus:outline-none appearance-none cursor-pointer">
+                            <option value="">Select Specialization</option>
+                            <?php foreach ($categories as $cat): ?>
+                                <option value="<?= $cat ?>" class="bg-[#0d1117]"><?= ucfirst($cat) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <!-- Role Specific: Vendor -> Vendor Type -->
+                    <div id="group-vendor" class="hidden md:col-span-2">
+                        <label for="vendor_type" class="block text-sm font-medium text-gray-300 mb-2">Vendor
+                            Type</label>
+                        <select name="vendor_type" id="vendor_type"
+                            class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-white focus:outline-none appearance-none cursor-pointer">
+                            <option value="">Select Vendor Category</option>
+                            <?php foreach ($vendor_types as $vt): ?>
+                                <option value="<?= $vt ?>" class="bg-[#0d1117]"><?= ucfirst($vt) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <div class="form-group" id="hostel-div" style="display:none;">
-                <label for="hostel_type">Hostel Type</label>
-                <select id="hostel_type" name="hostel_type">
-                    <option value="">Select hostel</option>
-                    <option value="boys" <?= (($_POST['hostel_type'] ?? '') == 'boys') ? 'selected' : '' ?>>Boys</option>
-                    <option value="girls" <?= (($_POST['hostel_type'] ?? '') == 'girls') ? 'selected' : '' ?>>Girls
-                    </option>
-                </select>
+            <!-- Step 3: Username & Security -->
+            <div id="panel-3" class="step-panel">
+                <div class="space-y-6">
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-gray-300 mb-2">Username</label>
+                        <div class="relative">
+                            <input type="text" id="username" name="username" required
+                                class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-white placeholder-gray-500 focus:outline-none transition-all pl-12"
+                                placeholder="Choose a unique username">
+                            <i data-lucide="at-sign"
+                                class="w-5 h-5 text-gray-500 absolute left-4 top-1/2 -translate-y-1/2"></i>
+                        </div>
+                        <p id="username-msg" class="text-xs mt-2"></p>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="password" class="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                            <div class="relative">
+                                <input type="password" id="password" name="password" required
+                                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-white placeholder-gray-500 focus:outline-none transition-all pl-12"
+                                    placeholder="Min. 8 chars">
+                                <i data-lucide="lock"
+                                    class="w-5 h-5 text-gray-500 absolute left-4 top-1/2 -translate-y-1/2"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="confirm_password"
+                                class="block text-sm font-medium text-gray-300 mb-2">Confirm</label>
+                            <div class="relative">
+                                <input type="password" id="confirm_password" name="confirm_password" required
+                                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-white placeholder-gray-500 focus:outline-none transition-all pl-12"
+                                    placeholder="Repeat password">
+                                <i data-lucide="check-circle-2"
+                                    class="w-5 h-5 text-gray-500 absolute left-4 top-1/2 -translate-y-1/2"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <button type="submit">Create Account</button>
+            <!-- Controls -->
+            <div class="flex items-center justify-between pt-8 border-t border-white/10">
+                <button type="button" id="prevBtn" onclick="nextPrev(-1)"
+                    class="px-6 py-3 text-gray-400 hover:text-white transition-colors flex items-center gap-2">
+                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                    Back
+                </button>
+                <div class="flex gap-4">
+                    <button type="button" id="nextBtn" onclick="nextPrev(1)"
+                        class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-8 py-3 rounded-xl shadow-lg shadow-blue-600/30 transition-all flex items-center gap-2">
+                        <span id="nextBtnText">Next Step</span>
+                        <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                    </button>
+                    <button type="submit" id="submitBtn"
+                        class="hidden bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-8 py-3 rounded-xl shadow-lg shadow-emerald-600/30 transition-all flex items-center gap-2">
+                        Complete Account
+                        <i data-lucide="user-plus" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
         </form>
 
-        <div class="login-link">
-            Already have an account? <a href="login.php">Sign in here</a>
-        </div>
+        <p class="mt-10 text-center text-gray-400 text-sm">
+            Already have an account?
+            <a href="login.php" class="text-blue-400 font-semibold hover:text-blue-300 transition-colors">Sign In</a>
+        </p>
     </div>
 
     <script>
-        function showSpec() {
-            var role = document.getElementById('role').value;
-            document.getElementById('spec-div').style.display = (role === 'technician') ? 'block' : 'none';
-            document.getElementById('hostel-div').style.display = (role === 'student') ? 'block' : 'none';
-            document.getElementById('vendor-type-div').style.display = (role === 'outsourced_vendor') ? 'block' : 'none';
+        lucide.createIcons();
+
+        let currentStep = 1;
+        const totalSteps = 3;
+
+        function setRole(role) {
+            document.getElementById('roleInput').value = role;
+            document.querySelectorAll('.role-card').forEach(card => {
+                if (card.dataset.role === role) {
+                    card.classList.add('active', 'border-blue-600', 'bg-blue-600/20', 'text-white');
+                } else {
+                    card.classList.remove('active', 'border-blue-600', 'bg-blue-600/20', 'text-white');
+                }
+            });
+
+            // Toggle role-specific fields
+            document.getElementById('group-hostel').classList.toggle('hidden', role !== 'student');
+            document.getElementById('group-tech').classList.toggle('hidden', role !== 'technician');
+            document.getElementById('group-vendor').classList.toggle('hidden', role !== 'outsourced_vendor');
         }
 
-        function togglePassword(fieldId) {
-            const field = document.getElementById(fieldId);
-            const icon = field.nextElementSibling.querySelector('.material-icons');
+        function setHostel(type) {
+            document.getElementById('hostelInput').value = type;
+            document.querySelectorAll('.hostel-card').forEach(card => {
+                if (card.dataset.hostel === type) {
+                    card.classList.add('border-blue-600', 'bg-blue-600/20', 'text-white');
+                } else {
+                    card.classList.remove('border-blue-600', 'bg-blue-600/20', 'text-white');
+                }
+            });
+        }
 
-            if (field.type === 'password') {
-                field.type = 'text';
-                icon.textContent = 'visibility_off';
-            } else {
-                field.type = 'password';
-                icon.textContent = 'visibility';
+        function validateStep(step) {
+            if (step === 1) {
+                const role = document.getElementById('roleInput').value;
+                const code = document.getElementById('special_code').value;
+                return role !== '' && code.length >= 4;
             }
+            if (step === 2) {
+                const name = document.getElementById('full_name').value;
+                const email = document.getElementById('email').value;
+                const phone = document.getElementById('phone').value;
+                if (!name || !email || !phone) return false;
+
+                const role = document.getElementById('roleInput').value;
+                if (role === 'student' && !document.getElementById('hostelInput').value) return false;
+                if (role === 'technician' && !document.getElementById('specialization').value) return false;
+                if (role === 'outsourced_vendor' && !document.getElementById('vendor_type').value) return false;
+
+                return true;
+            }
+            return true;
         }
 
-        // Real-time username and phone uniqueness check
-        function checkFieldUnique(field, value) {
-            if (!value) {
-                showFieldStatus(field, '');
+        function nextPrev(n) {
+            if (n === 1 && !validateStep(currentStep)) {
+                alert("Please fill in all required fields properly.");
                 return;
             }
-            fetch('auth/validate_unique.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: encodeURI('field=' + field + '&value=' + value)
-            })
-                .then(response => response.json())
-                .then(data => {
-                    showFieldStatus(field, data.unique ? '' : (field === 'username' ? 'Username already exists.' : 'Phone number already exists.'));
-                });
+
+            document.getElementById('panel-' + currentStep).classList.remove('active');
+            currentStep += n;
+
+            if (currentStep > totalSteps) {
+                // Should not happen if buttons hidden correctly, but for safety:
+                currentStep = totalSteps;
+            }
+
+            showStep(currentStep);
         }
 
-        function showFieldStatus(field, message) {
-            let el = document.getElementById(field + '-status');
-            if (!el) return;
-            el.textContent = message;
-            el.style.color = message ? '#dc2626' : '#059669';
-            updateSubmitState();
+        function showStep(s) {
+            document.getElementById('panel-' + s).classList.add('active');
+
+            // Update Nodes & Lines
+            for (let i = 1; i <= totalSteps; i++) {
+                const node = document.getElementById('step-node-' + i);
+                const label = document.getElementById('step-label-' + i);
+                if (i < s) {
+                    node.classList.add('completed');
+                    node.classList.remove('active');
+                    node.innerHTML = '<i data-lucide="check" class="w-5 h-5"></i>';
+                } else if (i === s) {
+                    node.classList.add('active');
+                    node.classList.remove('completed');
+                    node.innerHTML = `<span>${i}</span>`;
+                } else {
+                    node.classList.remove('active', 'completed');
+                    node.innerHTML = `<span>${i}</span>`;
+                }
+            }
+            lucide.createIcons();
+
+            // Progress lines
+            document.getElementById('step-line-1').style.width = s > 1 ? '100%' : '0%';
+            document.getElementById('step-line-2').style.width = s > 2 ? '100%' : '0%';
+
+            // Buttons
+            document.getElementById('prevBtn').classList.toggle('invisible', s === 1);
+            document.getElementById('nextBtn').classList.toggle('hidden', s === totalSteps);
+            document.getElementById('submitBtn').classList.toggle('hidden', s !== totalSteps);
         }
 
-        function updateSubmitState() {
-            const usernameStatus = document.getElementById('username-status').textContent;
-            const phoneStatus = document.getElementById('phone-status').textContent;
-            const button = document.querySelector('button[type="submit"]');
-            button.disabled = !!(usernameStatus || phoneStatus);
-        }
+        // Username Availability Check
+        const unInput = document.getElementById('username');
+        const unMsg = document.getElementById('username-msg');
+        let unTimer;
 
-        document.getElementById('username').addEventListener('input', function () {
-            checkFieldUnique('username', this.value.trim());
-        });
-        document.getElementById('phone').addEventListener('input', function () {
-            checkFieldUnique('phone', this.value.trim());
+        unInput.addEventListener('input', function () {
+            clearTimeout(unTimer);
+            unMsg.textContent = 'Checking...';
+            unMsg.className = 'text-xs mt-2 text-gray-400';
+
+            unTimer = setTimeout(() => {
+                const val = unInput.value.trim();
+                if (val.length < 3) {
+                    unMsg.textContent = 'Username must be at least 3 characters.';
+                    unMsg.className = 'text-xs mt-2 text-red-400';
+                    return;
+                }
+
+                fetch('validate_unique.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'field=username&value=' + encodeURIComponent(val)
+                })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.unique) {
+                            unMsg.textContent = 'Username is available!';
+                            unMsg.className = 'text-xs mt-2 text-emerald-400';
+                        } else {
+                            unMsg.textContent = 'Username is already taken.';
+                            unMsg.className = 'text-xs mt-2 text-red-400';
+                        }
+                    });
+            }, 500);
         });
 
-        // Add loading state to form submission
-        document.querySelector('form').addEventListener('submit', function (e) {
-            const button = this.querySelector('button[type="submit"]');
-            button.disabled = true;
-            button.innerHTML = '<span class="material-icons animate-spin">refresh</span> Creating account...';
-        });
-
-        // Initialize specialization visibility
-        window.onload = function () {
-            showSpec();
-            // Initial check for prefilled values
-            checkFieldUnique('username', document.getElementById('username').value.trim());
-            checkFieldUnique('phone', document.getElementById('phone').value.trim());
-        };
+        // Initialize Step 1
+        showStep(1);
     </script>
 </body>
 
