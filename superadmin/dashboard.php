@@ -1,18 +1,18 @@
 <?php
-require_once __DIR__.'/../includes/config.php';
-require_once __DIR__.'/../includes/functions.php';
+require_once __DIR__ . '/../includes/config.php';
+require_once __DIR__ . '/../includes/functions.php';
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'superadmin') {
     redirect('../auth/login.php?error=unauthorized');
 }
-$categories = ['mess','carpenter','wifi','housekeeping','plumber','electrician','laundry','ac'];
-$roles = ['student','faculty','nonteaching','technician'];
+$categories = ['mess', 'carpenter', 'wifi', 'housekeeping', 'plumber', 'electrician', 'laundry', 'ac'];
+$roles = ['student', 'faculty', 'nonteaching', 'technician'];
 
 // Get selected time period (default to monthly)
 $time_period = $_GET['time_period'] ?? 'monthly';
 
 // Define date range based on time period
 $date_condition = '';
-switch($time_period) {
+switch ($time_period) {
     case 'daily':
         $date_condition = "DATE(c.created_at) = CURDATE()";
         break;
@@ -31,7 +31,7 @@ switch($time_period) {
 $technicians = [];
 $tech_query = "SELECT id, full_name, specialization FROM users WHERE role = 'technician'";
 $result = $mysqli->query($tech_query);
-while($row = $result->fetch_assoc()){
+while ($row = $result->fetch_assoc()) {
     $technicians[] = $row;
 }
 
@@ -105,12 +105,13 @@ $stats = get_assignment_statistics();
 // Get system alerts for sidebar notification only
 $enhanced_stats = get_enhanced_assignment_statistics();
 $system_alerts = $enhanced_stats['enhanced']['system_health'] ?? [];
-$critical_alerts = array_filter($system_alerts, function($alert) {
+$critical_alerts = array_filter($system_alerts, function ($alert) {
     return $alert['severity'] === 'high';
 });
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -122,7 +123,7 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
         * {
             font-family: 'Inter', sans-serif;
         }
-        
+
         .glassmorphism {
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(10px);
@@ -133,11 +134,11 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
         .card-hover {
             transition: all 0.3s ease;
         }
-        
+
         .card-hover {
             transition: all 0.3s ease;
         }
-        
+
         .card-hover:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
@@ -276,8 +277,13 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
         }
 
         @keyframes shimmer-red {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
         }
 
         /* Mobile optimizations */
@@ -398,7 +404,8 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
                 flex-direction: column;
                 gap: 1rem;
                 text-align: center;
-                padding-top: 4rem !important; /* Add space for hamburger menu */
+                padding-top: 4rem !important;
+                /* Add space for hamburger menu */
             }
 
             .mobile-header img {
@@ -563,13 +570,16 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
         }
     </style>
 </head>
+
 <body class="bg-slate-50">
     <div id="loading" class="loading">
         <div class="spinner"></div>
     </div>
 
     <!-- Mobile Menu Button -->
-    <button id="menu-toggle" class="lg:hidden fixed top-4 left-4 z-50 p-3 rounded-xl bg-white text-slate-700 shadow-lg hover:bg-slate-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 border border-slate-200" aria-label="Toggle navigation menu">
+    <button id="menu-toggle"
+        class="lg:hidden fixed top-4 left-4 z-50 p-3 rounded-xl bg-white text-slate-700 shadow-lg hover:bg-slate-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 border border-slate-200"
+        aria-label="Toggle navigation menu">
         <div class="flex flex-col space-y-1">
             <span id="hamburger-line-1" class="w-5 h-0.5 bg-slate-700 transition-all duration-200"></span>
             <span id="hamburger-line-2" class="w-5 h-0.5 bg-slate-700 transition-all duration-200"></span>
@@ -585,10 +595,11 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
         <aside class="sidebar w-64 bg-slate-900 text-white flex flex-col fixed h-full shadow-xl">
             <div class="px-6 py-4 gradient-border flex items-center gap-4">
                 <div class="bg-white p-1.5 rounded-lg">
-                    <img src="../assets/images/aimt-logo.png" alt="AIMT Logo" class="w-10 h-10 logo-glow">
+                    <img src="<?= BASE_URL ?>assets/images/aimt-logo.png" alt="AIMT Logo" class="w-10 h-10 logo-glow">
                 </div>
                 <div>
-                    <h1 class="text-base font-bold tracking-tight">Complaint<span class="text-emerald-400">System</span></h1>
+                    <h1 class="text-base font-bold tracking-tight">Complaint<span class="text-emerald-400">System</span>
+                    </h1>
                     <div class="text-xs text-slate-400">AIMT Portal</div>
                 </div>
             </div>
@@ -598,23 +609,27 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
             </div>
             <nav class="flex-1 px-4 py-4 space-y-3 overflow-y-auto">
                 <!-- System Alerts (Top Priority) -->
-                <a href="system_alerts.php" class="sidebar-link flex items-center px-4 py-3 rounded-xl <?= !empty($critical_alerts) ? 'bg-red-900/50 border border-red-500' : '' ?>">
-                    <i class="lucide-alert-triangle mr-3 <?= !empty($critical_alerts) ? 'text-red-400' : 'text-slate-400' ?>"></i>
+                <a href="system_alerts.php"
+                    class="sidebar-link flex items-center px-4 py-3 rounded-xl <?= !empty($critical_alerts) ? 'bg-red-900/50 border border-red-500' : '' ?>">
+                    <i
+                        class="lucide-alert-triangle mr-3 <?= !empty($critical_alerts) ? 'text-red-400' : 'text-slate-400' ?>"></i>
                     <span>System Alerts</span>
                     <?php if (!empty($critical_alerts)): ?>
-                    <span class="ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-1 font-bold"><?= count($critical_alerts) ?></span>
+                        <span
+                            class="ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-1 font-bold"><?= count($critical_alerts) ?></span>
                     <?php endif; ?>
                 </a>
-                
+
                 <!-- Primary Navigation -->
                 <a href="dashboard.php" class="sidebar-link flex items-center px-4 py-3 rounded-xl bg-slate-800/50">
                     <i class="lucide-layout-dashboard mr-3 text-emerald-400"></i>
                     <span>Dashboard</span>
                 </a>
-                
+
                 <!-- Complaint Management (High Priority) -->
                 <div class="px-2 py-1">
-                    <div class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Complaint Management</div>
+                    <div class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Complaint Management
+                    </div>
                 </div>
                 <a href="view_complaints.php" class="sidebar-link flex items-center px-4 py-3 rounded-xl">
                     <i class="lucide-database mr-3 text-slate-400"></i>
@@ -628,7 +643,7 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
                     <i class="lucide-list-checks mr-3 text-slate-400"></i>
                     <span>My Complaints</span>
                 </a>
-                
+
                 <!-- User & Admin Management (High Priority) -->
                 <div class="px-2 py-1 mt-4">
                     <div class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">User Management</div>
@@ -641,10 +656,11 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
                     <i class="lucide-shield mr-3 text-slate-400"></i>
                     <span>Admin Management</span>
                 </a>
-                
+
                 <!-- System Operations (Medium Priority) -->
                 <div class="px-2 py-1 mt-4">
-                    <div class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">System Operations</div>
+                    <div class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">System Operations
+                    </div>
                 </div>
                 <a href="technician_status.php" class="sidebar-link flex items-center px-4 py-3 rounded-xl">
                     <i class="lucide-toggle-left mr-3 text-slate-400"></i>
@@ -654,10 +670,11 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
                     <i class="lucide-key mr-3 text-slate-400"></i>
                     <span>Generate Codes</span>
                 </a>
-                
+
                 <!-- Reports & Analytics (Medium Priority) -->
                 <div class="px-2 py-1 mt-4">
-                    <div class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Reports & Analytics</div>
+                    <div class="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Reports & Analytics
+                    </div>
                 </div>
                 <a href="reports.php" class="sidebar-link flex items-center px-4 py-3 rounded-xl">
                     <i class="lucide-bar-chart mr-3 text-slate-400"></i>
@@ -667,9 +684,10 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
                     <i class="lucide-lightbulb mr-3 text-slate-400"></i>
                     <span>Manage Suggestions</span>
                 </a>
-                
+
                 <!-- Help Guide Button -->
-                <button id="help-button" type="button" class="sidebar-link flex items-center w-full px-4 py-3 rounded-xl hover:bg-slate-800/50 transition-colors group">
+                <button id="help-button" type="button"
+                    class="sidebar-link flex items-center w-full px-4 py-3 rounded-xl hover:bg-slate-800/50 transition-colors group">
                     <i class="lucide-help-circle mr-3 text-emerald-400"></i>
                     <span>Help Guide</span>
                 </button>
@@ -687,18 +705,22 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
         <!-- Main Content -->
         <div class="main-content flex-1 flex flex-col px-4 sm:px-6 md:px-8 md:ml-64 max-w-7xl mx-auto w-full">
             <!-- Header -->
-            <header class="py-6 flex flex-col sm:flex-row items-center justify-between gap-4 mobile-header mobile-content-spacing">
+            <header
+                class="py-6 flex flex-col sm:flex-row items-center justify-between gap-4 mobile-header mobile-content-spacing">
                 <div class="flex items-center gap-4 sm:gap-6">
-                    <img src="../assets/images/aimt-logo.png" alt="AIMT Logo" class="w-12 h-12 sm:w-16 sm:h-16 logo-glow">
+                    <img src="../assets/images/aimt-logo.png" alt="AIMT Logo"
+                        class="w-12 h-12 sm:w-16 sm:h-16 logo-glow">
                     <div>
-                        <h1 class="text-lg sm:text-2xl font-bold institute-name mb-1">ARMY INSTITUTE OF MANAGEMENT & TECHNOLOGY</h1>
+                        <h1 class="text-lg sm:text-2xl font-bold institute-name mb-1">ARMY INSTITUTE OF MANAGEMENT &
+                            TECHNOLOGY</h1>
                         <p class="text-slate-500 text-sm sm:text-base">Superadmin Dashboard</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-6">
                     <div class="text-center sm:text-right">
                         <div class="text-sm text-slate-600">Welcome,</div>
-                        <div class="font-medium text-slate-900"><?= htmlspecialchars($_SESSION['full_name'] ?? 'Superadmin') ?></div>
+                        <div class="font-medium text-slate-900">
+                            <?= htmlspecialchars($_SESSION['full_name'] ?? 'Superadmin') ?></div>
                     </div>
                 </div>
             </header>
@@ -715,8 +737,8 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
                             <p class="text-sm text-slate-500">Select duration for statistics</p>
                         </div>
                     </div>
-                    <select id="time-period" onchange="window.location.href='dashboard.php?time_period=' + this.value" 
-                            class="border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+                    <select id="time-period" onchange="window.location.href='dashboard.php?time_period=' + this.value"
+                        class="border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
                         <option value="daily" <?= $time_period === 'daily' ? 'selected' : '' ?>>Daily</option>
                         <option value="monthly" <?= $time_period === 'monthly' ? 'selected' : '' ?>>Monthly</option>
                         <option value="yearly" <?= $time_period === 'yearly' ? 'selected' : '' ?>>Yearly</option>
@@ -735,117 +757,144 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
                 ORDER BY hi.updated_at DESC");
 
             if ($active_issues->num_rows > 0):
-            ?>
-            <div class="glassmorphism rounded-2xl shadow-lg p-6 mb-6 sm:mb-8">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-semibold text-slate-900">Active Hostel-Wide Issues</h2>
-                    <div class="text-sm text-slate-500">
-                        <i class="lucide-building mr-1"></i>
-                        Urgent hostel-wide complaints that need attention
+                ?>
+                <div class="glassmorphism rounded-2xl shadow-lg p-6 mb-6 sm:mb-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-semibold text-slate-900">Active Hostel-Wide Issues</h2>
+                        <div class="text-sm text-slate-500">
+                            <i class="lucide-building mr-1"></i>
+                            Urgent hostel-wide complaints that need attention
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto mobile-table">
+                        <table class="min-w-full divide-y divide-slate-200">
+                            <thead class="bg-slate-50">
+                                <tr>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        Hostel</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        Issue</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        Status</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        Votes</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        Last Updated</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-slate-200">
+                                <?php while ($issue = $active_issues->fetch_assoc()): ?>
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
+                                            <?= htmlspecialchars($hostel_types[$issue['hostel_type']] ?? $issue['hostel_type']) ?>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                            <?= htmlspecialchars($issue_types[$issue['issue_type']] ?? $issue['issue_type']) ?>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span
+                                                class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
+                                            <?= $issue['status'] === 'in_progress' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800' ?>">
+                                                <?= ucfirst(str_replace('_', ' ', $issue['status'])) ?>
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                            <?= $issue['votes'] ?>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                            <?= date('M j, Y H:i', strtotime($issue['updated_at'])) ?>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                            <a href="hostel_issue_details.php?id=<?= $issue['id'] ?>"
+                                                class="inline-flex items-center px-3 py-1 border border-slate-300 text-sm font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50">
+                                                View Details
+                                            </a>
+                                        </td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-                <div class="overflow-x-auto mobile-table">
-                    <table class="min-w-full divide-y divide-slate-200">
-                        <thead class="bg-slate-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Hostel</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Issue</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Votes</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Last Updated</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-slate-200">
-                            <?php while ($issue = $active_issues->fetch_assoc()): ?>
-                                <tr class="hover:bg-slate-50">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
-                                        <?= htmlspecialchars($hostel_types[$issue['hostel_type']] ?? $issue['hostel_type']) ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                                        <?= htmlspecialchars($issue_types[$issue['issue_type']] ?? $issue['issue_type']) ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
-                                            <?= $issue['status'] === 'in_progress' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800' ?>">
-                                            <?= ucfirst(str_replace('_',' ',$issue['status'])) ?>
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                                        <?= $issue['votes'] ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                                        <?= date('M j, Y H:i', strtotime($issue['updated_at'])) ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                                        <a href="hostel_issue_details.php?id=<?= $issue['id'] ?>" class="inline-flex items-center px-3 py-1 border border-slate-300 text-sm font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50">
-                                            View Details
-                                        </a>
-                                    </td>
-                                </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
             <?php endif; ?>
 
             <!-- KPI Dashboard Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <!-- Total Complaints KPI -->
-                <div class="group relative bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-lg hover:border-slate-300 transition-all duration-300">
+                <div
+                    class="group relative bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-lg hover:border-slate-300 transition-all duration-300">
                     <!-- Icon Header -->
                     <div class="flex items-center justify-between mb-6">
-                        <div class="w-12 h-12 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                        <div
+                            class="w-12 h-12 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
                             <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                </path>
                             </svg>
                         </div>
                         <div class="text-right">
-                            <div class="text-xs font-medium text-slate-500 uppercase tracking-wide"><?= ucfirst($time_period) ?></div>
+                            <div class="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                                <?= ucfirst($time_period) ?></div>
                         </div>
                     </div>
-                    
+
                     <!-- Main Content -->
                     <div class="mb-6">
                         <h3 class="text-base font-semibold text-slate-900 mb-2">Total Complaints</h3>
-                        <div class="text-3xl font-bold text-slate-900 mb-3"><?= number_format($total_complaints) ?></div>
+                        <div class="text-3xl font-bold text-slate-900 mb-3"><?= number_format($total_complaints) ?>
+                        </div>
                         <div class="flex items-center text-slate-600">
                             <div class="w-2 h-2 bg-emerald-500 rounded-full mr-2"></div>
                             <span class="text-sm font-medium">Active complaints</span>
                         </div>
                     </div>
-                    
+
                     <!-- Action -->
                     <div class="pt-4 border-t border-slate-100">
-                        <a href="view_complaints.php" class="inline-flex items-center justify-between w-full text-emerald-600 hover:text-emerald-700 text-sm font-semibold group-hover:translate-x-1 transition-transform duration-200">
+                        <a href="view_complaints.php"
+                            class="inline-flex items-center justify-between w-full text-emerald-600 hover:text-emerald-700 text-sm font-semibold group-hover:translate-x-1 transition-transform duration-200">
                             <span>View All Complaints</span>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
+                                </path>
                             </svg>
                         </a>
                     </div>
                 </div>
 
                 <!-- Completion Rate KPI -->
-                <div class="group relative bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-lg hover:border-slate-300 transition-all duration-300">
+                <div
+                    class="group relative bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-lg hover:border-slate-300 transition-all duration-300">
                     <!-- Icon Header -->
                     <div class="flex items-center justify-between mb-6">
-                        <div class="w-12 h-12 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                        <div
+                            class="w-12 h-12 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
                             <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                                </path>
                             </svg>
                         </div>
                         <div class="text-right">
-                            <div class="text-xs font-medium text-slate-500 uppercase tracking-wide"><?= ucfirst($time_period) ?></div>
+                            <div class="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                                <?= ucfirst($time_period) ?></div>
                         </div>
                     </div>
-                    
+
                     <!-- Main Content -->
                     <div class="mb-6">
                         <h3 class="text-base font-semibold text-slate-900 mb-2">Completion Rate</h3>
                         <div class="text-3xl font-bold text-slate-900 mb-3"><?= $completion_percentage ?>%</div>
-                        
+
                         <!-- Dynamic Progress Bar -->
                         <div class="space-y-2 mb-3">
                             <div class="bg-slate-200 rounded-full h-2 overflow-hidden">
@@ -854,7 +903,7 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
                                 $progress_color = '';
                                 $status_color = '';
                                 $status_text = '';
-                                
+
                                 if ($completion_percentage >= 80) {
                                     $progress_color = 'from-emerald-500 to-emerald-600';
                                     $status_color = 'bg-emerald-500';
@@ -877,80 +926,94 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
                                     $status_text = 'Poor';
                                 }
                                 ?>
-                                <div class="bg-gradient-to-r <?= $progress_color ?> h-2 rounded-full transition-all duration-700 ease-out" style="width: <?= $completion_percentage ?>%"></div>
+                                <div class="bg-gradient-to-r <?= $progress_color ?> h-2 rounded-full transition-all duration-700 ease-out"
+                                    style="width: <?= $completion_percentage ?>%"></div>
                             </div>
                             <div class="flex items-center justify-between text-xs text-slate-500">
                                 <span>0%</span>
                                 <span>100%</span>
                             </div>
                         </div>
-                        
+
                         <div class="flex items-center text-slate-600">
                             <div class="w-2 h-2 <?= $status_color ?> rounded-full mr-2"></div>
                             <span class="text-sm font-medium"><?= $status_text ?> performance</span>
                         </div>
                     </div>
-                    
+
                     <!-- Action -->
                     <div class="pt-4 border-t border-slate-100">
-                        <a href="reports.php" class="inline-flex items-center justify-between w-full text-blue-600 hover:text-blue-700 text-sm font-semibold group-hover:translate-x-1 transition-transform duration-200">
+                        <a href="reports.php"
+                            class="inline-flex items-center justify-between w-full text-blue-600 hover:text-blue-700 text-sm font-semibold group-hover:translate-x-1 transition-transform duration-200">
                             <span>View Reports</span>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
+                                </path>
                             </svg>
                         </a>
                     </div>
                 </div>
 
                 <!-- Resolved Complaints KPI -->
-                <div class="group relative bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-lg hover:border-slate-300 transition-all duration-300">
+                <div
+                    class="group relative bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-lg hover:border-slate-300 transition-all duration-300">
                     <!-- Icon Header -->
                     <div class="flex items-center justify-between mb-6">
-                        <div class="w-12 h-12 bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                        <div
+                            class="w-12 h-12 bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
                             <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                         </div>
                         <div class="text-right">
-                            <div class="text-xs font-medium text-slate-500 uppercase tracking-wide"><?= ucfirst($time_period) ?></div>
+                            <div class="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                                <?= ucfirst($time_period) ?></div>
                         </div>
                     </div>
-                    
+
                     <!-- Main Content -->
                     <div class="mb-6">
                         <h3 class="text-base font-semibold text-slate-900 mb-2">Resolved Complaints</h3>
-                        <div class="text-3xl font-bold text-slate-900 mb-3"><?= number_format($resolved_complaints) ?></div>
+                        <div class="text-3xl font-bold text-slate-900 mb-3"><?= number_format($resolved_complaints) ?>
+                        </div>
                         <div class="flex items-center text-slate-600">
                             <div class="w-2 h-2 bg-teal-500 rounded-full mr-2"></div>
                             <span class="text-sm font-medium">Successfully resolved</span>
                         </div>
                     </div>
-                    
+
                     <!-- Action -->
                     <div class="pt-4 border-t border-slate-100">
-                        <a href="view_complaints.php?status=resolved" class="inline-flex items-center justify-between w-full text-teal-600 hover:text-teal-700 text-sm font-semibold group-hover:translate-x-1 transition-transform duration-200">
+                        <a href="view_complaints.php?status=resolved"
+                            class="inline-flex items-center justify-between w-full text-teal-600 hover:text-teal-700 text-sm font-semibold group-hover:translate-x-1 transition-transform duration-200">
                             <span>View Resolved</span>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
+                                </path>
                             </svg>
                         </a>
                     </div>
                 </div>
 
                 <!-- Total Users KPI -->
-                <div class="group relative bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-lg hover:border-slate-300 transition-all duration-300">
+                <div
+                    class="group relative bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-lg hover:border-slate-300 transition-all duration-300">
                     <!-- Icon Header -->
                     <div class="flex items-center justify-between mb-6">
-                        <div class="w-12 h-12 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                        <div
+                            class="w-12 h-12 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
                             <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                                </path>
                             </svg>
                         </div>
                         <div class="text-right">
                             <div class="text-xs font-medium text-slate-500 uppercase tracking-wide">System</div>
                         </div>
                     </div>
-                    
+
                     <!-- Main Content -->
                     <div class="mb-6">
                         <h3 class="text-base font-semibold text-slate-900 mb-2">Total Users</h3>
@@ -960,13 +1023,15 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
                             <span class="text-sm font-medium">Registered users</span>
                         </div>
                     </div>
-                    
+
                     <!-- Action -->
                     <div class="pt-4 border-t border-slate-100">
-                        <a href="user_management.php" class="inline-flex items-center justify-between w-full text-purple-600 hover:text-purple-700 text-sm font-semibold group-hover:translate-x-1 transition-transform duration-200">
+                        <a href="user_management.php"
+                            class="inline-flex items-center justify-between w-full text-purple-600 hover:text-purple-700 text-sm font-semibold group-hover:translate-x-1 transition-transform duration-200">
                             <span>Manage Users</span>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
+                                </path>
                             </svg>
                         </a>
                     </div>
@@ -979,19 +1044,19 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
                 <div class="glassmorphism rounded-2xl shadow-lg p-6">
                     <h2 class="text-xl font-semibold text-slate-900 mb-6">Complaints by Category</h2>
                     <div class="space-y-6">
-                        <?php 
+                        <?php
                         // Sort categories by total complaints
-                        uasort($category_stats, function($a, $b) {
+                        uasort($category_stats, function ($a, $b) {
                             return $b['total'] - $a['total'];
                         });
-                        
-                        foreach ($category_stats as $category => $stats): 
-                        ?>
+
+                        foreach ($category_stats as $category => $stats):
+                            ?>
                             <div class="border-b border-slate-200 pb-4 last:border-0 last:pb-0">
                                 <div class="flex justify-between items-center mb-3">
                                     <h3 class="font-medium text-slate-900 capitalize"><?= $category ?></h3>
-                                    <a href="view_complaints.php?category=<?= urlencode($category) ?>" 
-                                       class="text-emerald-600 hover:text-emerald-700 text-sm font-medium inline-flex items-center">
+                                    <a href="view_complaints.php?category=<?= urlencode($category) ?>"
+                                        class="text-emerald-600 hover:text-emerald-700 text-sm font-medium inline-flex items-center">
                                         Details
                                         <i class="lucide-arrow-right ml-1 h-4 w-4"></i>
                                     </a>
@@ -1016,8 +1081,8 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
                                         <span class="font-medium text-slate-900"><?= $stats['completion_rate'] ?>%</span>
                                     </div>
                                     <div class="bg-slate-200 rounded-full h-1.5">
-                                        <div class="bg-emerald-500 h-1.5 rounded-full" 
-                                             style="width: <?= $stats['completion_rate'] ?>%"></div>
+                                        <div class="bg-emerald-500 h-1.5 rounded-full"
+                                            style="width: <?= $stats['completion_rate'] ?>%"></div>
                                     </div>
                                 </div>
                             </div>
@@ -1030,11 +1095,13 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
                     <h2 class="text-xl font-semibold text-slate-900 mb-6">Recent Complaints</h2>
                     <div class="space-y-4">
                         <?php foreach ($recent_complaints as $complaint): ?>
-                            <a href="complaint_details.php?token=<?= urlencode($complaint['token']) ?>" 
-                               class="block flex items-start justify-between p-4 rounded-xl border border-slate-200 hover:border-emerald-200 hover:bg-emerald-50 transition-all duration-200 cursor-pointer">
+                            <a href="complaint_details.php?token=<?= urlencode($complaint['token']) ?>"
+                                class="block flex items-start justify-between p-4 rounded-xl border border-slate-200 hover:border-emerald-200 hover:bg-emerald-50 transition-all duration-200 cursor-pointer">
                                 <div>
-                                    <div class="font-medium text-slate-900"><?= htmlspecialchars($complaint['user_name']) ?></div>
-                                    <div class="text-slate-500 text-sm capitalize"><?= htmlspecialchars($complaint['category']) ?></div>
+                                    <div class="font-medium text-slate-900"><?= htmlspecialchars($complaint['user_name']) ?>
+                                    </div>
+                                    <div class="text-slate-500 text-sm capitalize">
+                                        <?= htmlspecialchars($complaint['category']) ?></div>
                                 </div>
                                 <div class="text-right">
                                     <div class="inline-flex px-2 py-1 rounded-full text-xs font-medium 
@@ -1046,10 +1113,10 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
                                     </div>
                                 </div>
                             </a>
-                    <?php endforeach; ?>
+                        <?php endforeach; ?>
                         <div class="text-center pt-4">
-                            <a href="view_complaints.php" 
-                               class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors font-medium text-sm">
+                            <a href="view_complaints.php"
+                                class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors font-medium text-sm">
                                 View All Complaints
                                 <i class="lucide-arrow-right ml-2 h-4 w-4"></i>
                             </a>
@@ -1063,8 +1130,8 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-semibold text-slate-900">Resolved Hostel-Wide Issues</h2>
                     <div class="flex items-center gap-4">
-                    <div class="text-sm text-slate-500">
-                        <i class="lucide-building mr-1"></i>
+                        <div class="text-sm text-slate-500">
+                            <i class="lucide-building mr-1"></i>
                             <?php
                             try {
                                 $resolved_count = $mysqli->query("SELECT COUNT(*) as count FROM hostel_issues WHERE status = 'resolved'")->fetch_assoc()['count'];
@@ -1074,71 +1141,80 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
                             }
                             ?>
                         </div>
-                        <button onclick="toggleResolvedIssues()" class="inline-flex items-center px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors">
+                        <button onclick="toggleResolvedIssues()"
+                            class="inline-flex items-center px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition-colors">
                             <span id="toggle-text">Show Details</span>
                             <i id="toggle-icon" class="lucide-chevron-down ml-1 h-4 w-4"></i>
                         </button>
                     </div>
                 </div>
                 <div id="resolved-issues" class="hidden">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200">
-                        <thead class="bg-slate-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Hostel</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Issue</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Votes</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Resolved On</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-slate-200">
-                            <?php
-                            try {
-                                // Fetch resolved hostel-wide issues
-                                $resolved_issues = $mysqli->query("SELECT hi.*, 
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-slate-200">
+                            <thead class="bg-slate-50">
+                                <tr>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        Hostel</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        Issue</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        Votes</th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                                        Resolved On</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-slate-200">
+                                <?php
+                                try {
+                                    // Fetch resolved hostel-wide issues
+                                    $resolved_issues = $mysqli->query("SELECT hi.*, 
                                     (SELECT COUNT(*) FROM hostel_issue_votes v WHERE v.issue_id = hi.id) as votes
                                     FROM hostel_issues hi
                                     WHERE hi.status = 'resolved'
                                     ORDER BY hi.updated_at DESC");
 
-                                if ($resolved_issues && $resolved_issues->num_rows > 0):
-                                    while ($issue = $resolved_issues->fetch_assoc()): 
-                            ?>
-                                <tr class="hover:bg-slate-50">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
-                                        <?= htmlspecialchars($hostel_types[$issue['hostel_type']] ?? $issue['hostel_type']) ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                                        <?= htmlspecialchars($issue_types[$issue['issue_type']] ?? $issue['issue_type']) ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                                        <?= $issue['votes'] ?>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                                        <?= date('M j, Y H:i', strtotime($issue['updated_at'])) ?>
-                                    </td>
-                                </tr>
-                            <?php 
-                                    endwhile;
-                                else:
-                            ?>
-                                <tr>
-                                    <td colspan="4" class="px-6 py-4 text-center text-sm text-slate-500">
-                                        No resolved hostel-wide issues.
-                                    </td>
-                                </tr>
-                            <?php 
-                                endif;
-                            } catch (Exception $e) {
-                            ?>
-                                <tr>
-                                    <td colspan="4" class="px-6 py-4 text-center text-sm text-slate-500">
-                                        Unable to load resolved issues.
-                                    </td>
-                                </tr>
-                            <?php } ?>
-                        </tbody>
-                    </table>
+                                    if ($resolved_issues && $resolved_issues->num_rows > 0):
+                                        while ($issue = $resolved_issues->fetch_assoc()):
+                                            ?>
+                                            <tr class="hover:bg-slate-50">
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
+                                                    <?= htmlspecialchars($hostel_types[$issue['hostel_type']] ?? $issue['hostel_type']) ?>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                                    <?= htmlspecialchars($issue_types[$issue['issue_type']] ?? $issue['issue_type']) ?>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                                    <?= $issue['votes'] ?>
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                                    <?= date('M j, Y H:i', strtotime($issue['updated_at'])) ?>
+                                                </td>
+                                            </tr>
+                                        <?php
+                                        endwhile;
+                                    else:
+                                        ?>
+                                        <tr>
+                                            <td colspan="4" class="px-6 py-4 text-center text-sm text-slate-500">
+                                                No resolved hostel-wide issues.
+                                            </td>
+                                        </tr>
+                                    <?php
+                                    endif;
+                                } catch (Exception $e) {
+                                    ?>
+                                    <tr>
+                                        <td colspan="4" class="px-6 py-4 text-center text-sm text-slate-500">
+                                            Unable to load resolved issues.
+                                        </td>
+                                    </tr>
+                                <?php } ?>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -1160,10 +1236,10 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
             const menuToggle = document.getElementById('menu-toggle');
             const sidebar = document.querySelector('.sidebar');
             const mobileOverlay = document.getElementById('mobile-overlay');
-            
+
             function toggleMobileMenu() {
                 const isActive = sidebar.classList.contains('active');
-                
+
                 if (isActive) {
                     // Close menu
                     sidebar.classList.remove('active');
@@ -1180,7 +1256,7 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
                     document.body.style.overflow = 'hidden';
                 }
             }
-            
+
             menuToggle.addEventListener('click', (e) => {
                 e.stopPropagation();
                 toggleMobileMenu();
@@ -1193,9 +1269,9 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
 
             // Close sidebar when clicking outside
             document.addEventListener('click', (event) => {
-                if (window.innerWidth <= 768 && 
-                    !sidebar.contains(event.target) && 
-                    !menuToggle.contains(event.target) && 
+                if (window.innerWidth <= 768 &&
+                    !sidebar.contains(event.target) &&
+                    !menuToggle.contains(event.target) &&
                     sidebar.classList.contains('active')) {
                     toggleMobileMenu();
                 }
@@ -1221,12 +1297,12 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
         });
 
         function toggleResolvedIssues() {
-           
-            
+
+
             const resolvedSection = document.getElementById('resolved-issues');
             const toggleText = document.getElementById('toggle-text');
             const toggleIcon = document.getElementById('toggle-icon');
-            
+
             if (resolvedSection.classList.contains('hidden')) {
                 resolvedSection.classList.remove('hidden');
                 toggleText.textContent = 'Hide Details';
@@ -1242,7 +1318,11 @@ $critical_alerts = array_filter($system_alerts, function($alert) {
     </script>
     <?php include 'help_guide.php'; ?>
 </body>
-</html> 
-</html> 
-</html> 
-</html> 
+
+</html>
+
+</html>
+
+</html>
+
+</html>

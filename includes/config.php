@@ -20,4 +20,14 @@ try {
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
+// Define Base URL for unified path resolution
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+// Get the directory containing this config file and go up one level
+$script_name = $_SERVER['SCRIPT_NAME'] ?? '';
+$base_dir = str_replace('\\', '/', dirname(dirname($script_name)));
+if ($base_dir === '/')
+    $base_dir = '';
+define('BASE_URL', $protocol . $host . $base_dir . '/');
 ?>

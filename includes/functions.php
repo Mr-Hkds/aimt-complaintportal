@@ -3255,4 +3255,4 @@ function calculate_enhanced_complaint_priority($complaint_id) {
     
     return $priority_score;
 }
-?> 
+?>

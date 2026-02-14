@@ -160,7 +160,7 @@ if (isset($_SERVER['PATH_INFO']) && $_SERVER['PATH_INFO'] !== '/') {
     <header class="military-gradient text-white">
         <div class="container mx-auto px-4 py-3">
             <div class="flex items-center justify-center gap-4">
-                <img src="assets/images/aimt-logo.png" alt="AIMT Logo" class="w-14 h-14 logo-glow"
+                <img src="<?= BASE_URL ?>assets/images/aimt-logo.png" alt="AIMT Logo" class="w-14 h-14 logo-glow"
                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                 <div class="logo-fallback w-14 h-14">AIMT</div>
                 <div>

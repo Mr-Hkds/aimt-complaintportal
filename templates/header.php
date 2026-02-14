@@ -1,34 +1,36 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) session_start();
+if (session_status() === PHP_SESSION_NONE)
+    session_start();
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Complaint Management Portal - Army Institute of Management & Technology">
     <meta name="theme-color" content="#1e3a8a">
     <title>Complaint Management Portal - AIMT</title>
-    
+
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="assets/images/aimt-logo.png">
-    
+    <link rel="icon" type="image/png" href="<?= BASE_URL ?>assets/images/aimt-logo.png">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Styles -->
     <link rel="stylesheet" href="assets/css/portal.css">
-    
+
     <!-- Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    
+
     <!-- Modern Dependencies -->
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-    
+
     <!-- Error Handler Script -->
     <script src="assets/js/error-handler.js"></script>
 
@@ -52,7 +54,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
             --neutral-700: #374151;
             --neutral-800: #1f2937;
             --neutral-900: #111827;
-            
+
             /* Spacing System */
             --space-1: 0.25rem;
             --space-2: 0.5rem;
@@ -63,7 +65,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
             --space-8: 2rem;
             --space-10: 2.5rem;
             --space-12: 3rem;
-            
+
             /* Typography */
             --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
             --font-size-xs: 0.75rem;
@@ -73,13 +75,13 @@ if (session_status() === PHP_SESSION_NONE) session_start();
             --font-size-xl: 1.25rem;
             --font-size-2xl: 1.5rem;
             --font-size-3xl: 1.875rem;
-            
+
             /* Shadows */
             --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
             --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
             --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
             --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-            
+
             /* Transitions */
             --transition-all: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             --transition-transform: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -131,19 +133,39 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 
         /* Animation Classes */
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
         @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
 
         .animate-fade-in {
@@ -158,29 +180,30 @@ if (session_status() === PHP_SESSION_NONE) session_start();
             animation: pulse 2s infinite;
         }
     </style>
-<?php if (function_exists('generate_csrf_token')) { ?>
-<script>
-// Auto-inject CSRF token into every POST form if not already present
- document.addEventListener('DOMContentLoaded',()=>{
-   const token = '<?= generate_csrf_token() ?>';
-   document.querySelectorAll('form[method="post"]').forEach(form=>{
-     if(!form.querySelector('input[name="csrf_token"]')){
-       const hidden = document.createElement('input');
-       hidden.type = 'hidden';
-       hidden.name = 'csrf_token';
-       hidden.value = token;
-       form.appendChild(hidden);
-     }
-   });
- });
-</script>
-<?php } ?>
+    <?php if (function_exists('generate_csrf_token')) { ?>
+        <script>
+            // Auto-inject CSRF token into every POST form if not already present
+            document.addEventListener('DOMContentLoaded', () => {
+                const token = '<?= generate_csrf_token() ?>';
+                document.querySelectorAll('form[method="post"]').forEach(form => {
+                    if (!form.querySelector('input[name="csrf_token"]')) {
+                        const hidden = document.createElement('input');
+                        hidden.type = 'hidden';
+                        hidden.name = 'csrf_token';
+                        hidden.value = token;
+                        form.appendChild(hidden);
+                    }
+                });
+            });
+        </script>
+    <?php } ?>
 </head>
+
 <body>
     <header class="portal-header">
         <div class="header-container">
             <div class="header-brand">
-                <img src="assets/images/aimt-logo.png" alt="AIMT Logo" class="header-logo">
+                <img src="<?= BASE_URL ?>assets/images/aimt-logo.png" alt="AIMT Logo" class="header-logo">
                 <div>
                     <h1 class="header-title">Army Institute of Management & Technology</h1>
                     <p class="header-subtitle">Complaint Management Portal</p>
@@ -210,7 +233,7 @@ if (session_status() === PHP_SESSION_NONE) session_start();
                             <span class="material-icons">logout</span>
                             <span>Logout</span>
                         </a>
-                    <?php elseif (in_array($_SESSION['role'], ['student','faculty','nonteaching'])): ?>
+                    <?php elseif (in_array($_SESSION['role'], ['student', 'faculty', 'nonteaching'])): ?>
                         <a href="user/dashboard.php">
                             <span class="material-icons">dashboard</span>
                             <span>Dashboard</span>
@@ -231,4 +254,4 @@ if (session_status() === PHP_SESSION_NONE) session_start();
     </header>
 
     <div class="page-container">
-        <main class="container"> 
+        <main class="container">
