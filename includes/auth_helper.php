@@ -20,19 +20,37 @@ function is_rate_limited($action, $limit = 5, $window = 15)
     global $mysqli;
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 
-    // Cleanup old records first (maintenance)
-    $mysqli->query("DELETE FROM rate_limits WHERE attempted_at < DATE_SUB(NOW(), INTERVAL $window MINUTE)");
+    try {
+        // Cleanup old records
+        $mysqli->query("DELETE FROM rate_limits WHERE attempted_at < DATE_SUB(NOW(), INTERVAL $window MINUTE)");
 
-    // Count attempts for this IP and action in the window
-    $stmt = $mysqli->prepare("SELECT COUNT(*) FROM rate_limits WHERE action = ? AND ip_address = ? AND attempted_at > DATE_SUB(NOW(), INTERVAL ? MINUTE)");
-    $stmt->bind_param('ssi', $action, $ip, $window);
-    $stmt->execute();
-    $result = $stmt->get_result()->fetch_row();
-    $attempts = $result[0];
-    $stmt->close();
+        // Count attempts for this IP and action in the window
+        $stmt = $mysqli->prepare("SELECT COUNT(*) FROM rate_limits WHERE action = ? AND ip_address = ? AND attempted_at > DATE_SUB(NOW(), INTERVAL ? MINUTE)");
+        $stmt->bind_param('ssi', $action, $ip, $window);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_row();
+        $attempts = $result[0];
+        $stmt->close();
 
-    return $attempts >= $limit;
+        return $attempts >= $limit;
+    } catch (mysqli_sql_exception $e) {
+        // If table doesn't exist, create it automatically (Self-healing)
+        if (strpos($e->getMessage(), "doesn't exist") !== false) {
+            $mysqli->query("CREATE TABLE IF NOT EXISTS `rate_limits` (
+                `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                `action` VARCHAR(50) NOT NULL,
+                `ip_address` VARCHAR(45) NOT NULL,
+                `attempted_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (`id`),
+                KEY `idx_action_ip` (`action`, `ip_address`),
+                KEY `idx_attempted_at` (`attempted_at`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+            return false; // Table was just created, so not limited yet
+        }
+        throw $e; // Re-throw if it's a different error
+    }
 }
+
 
 /**
  * Record a new attempt for rate limiting
@@ -51,6 +69,27 @@ function record_attempt($action)
 }
 
 /**
+ * Ensure database schema is up to date (Self-healing)
+ */
+function ensure_schema_up_to_date()
+{
+    global $mysqli;
+
+    // Check status column
+    $result = $mysqli->query("SHOW COLUMNS FROM users LIKE 'status'");
+    if ($result->num_rows === 0) {
+        $mysqli->query("ALTER TABLE users ADD COLUMN status ENUM('pending', 'approved', 'suspended') NOT NULL DEFAULT 'approved' AFTER role");
+    }
+
+    // Check email column
+    $result = $mysqli->query("SHOW COLUMNS FROM users LIKE 'email'");
+    if ($result->num_rows === 0) {
+        $mysqli->query("ALTER TABLE users ADD COLUMN email VARCHAR(100) DEFAULT NULL AFTER full_name");
+        $mysqli->query("CREATE INDEX idx_email ON users(email)");
+    }
+}
+
+/**
  * Authenticate a user
  * 
  * @param string $username
@@ -61,8 +100,10 @@ function record_attempt($action)
 function login_user($username, $password, $role)
 {
     global $mysqli;
+    ensure_schema_up_to_date();
 
     if (is_rate_limited('login_attempt')) {
+
         log_security_action('login_rate_limit_triggered', $username, 'Too many attempts from IP: ' . $_SERVER['REMOTE_ADDR']);
         return "Too many failed login attempts. Please try again in 15 minutes.";
     }
@@ -114,8 +155,10 @@ function login_user($username, $password, $role)
 function register_user($data)
 {
     global $mysqli;
+    ensure_schema_up_to_date();
 
     if (is_rate_limited('registration', 3, 60)) {
+
         return "Too many registration attempts. Please try again later.";
     }
 
