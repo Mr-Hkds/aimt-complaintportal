@@ -170,24 +170,6 @@ function get_complaint_assignment_details($complaint)
             $details['icon'] = 'user-x';
             break;
         case 'manual':
-            $details['message'] = 'This complaint was specifically assigned by an administrator.';
-            $details['badge_class'] = 'bg-purple-100 text-purple-800';
-            $details['badge_text'] = 'Admin Assigned';
-            $details['icon'] = 'shield';
-            break;
-        case 'reassigned':
-            $details['message'] = 'This complaint was automatically reassigned by the system because the previous technician became unavailable.';
-            $details['badge_class'] = 'bg-orange-100 text-orange-800';
-            $details['badge_text'] = 'Reassigned';
-            $details['icon'] = 'repeat';
-            break;
-            $details['message'] = 'This complaint was specifically assigned by an administrator.';
-            $details['badge_class'] = 'bg-purple-100 text-purple-800';
-            $details['badge_text'] = 'Admin Assigned';
-            $details['icon'] = 'shield';
-            break;
-
-        case 'manual':
         default:
             $details['message'] = 'This complaint was manually assigned.';
             $details['badge_class'] = 'bg-blue-100 text-blue-800';

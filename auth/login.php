@@ -9,8 +9,11 @@ require_once __DIR__ . '/../includes/functions.php';
 $roles = ['student', 'faculty', 'nonteaching', 'technician', 'superadmin', 'outsourced_vendor'];
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Validate CSRF token
-    if (!isset($_POST['csrf_token']) || !validate_csrf_token($_POST['csrf_token'])) {
+    // Rate limiting
+    if (is_rate_limited('login_attempt', 5, 15)) {
+        $error = 'Too many failed login attempts. Please try again later.';
+        log_security_action('login_rate_limit_triggered', $username);
+    } else if (!isset($_POST['csrf_token']) || !validate_csrf_token($_POST['csrf_token'])) {
         $error = 'Invalid request. Please try again.';
     } else {
         $username = trim($_POST['username'] ?? '');
@@ -22,24 +25,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Invalid role.';
         } else {
             // Normal login flow
-            $stmt = $mysqli->prepare("SELECT id, full_name, phone, password_hash, hostel_type, specialization FROM users WHERE username = ? AND role = ?");
+            $stmt = $mysqli->prepare("SELECT id, full_name, phone, password_hash, hostel_type, specialization, status FROM users WHERE username = ? AND role = ?");
             $stmt->bind_param('ss', $username, $role);
             $stmt->execute();
             $stmt->store_result();
             if ($stmt->num_rows === 1) {
-                $stmt->bind_result($id, $full_name, $phone, $hash, $hostel_type, $specialization);
+                $stmt->bind_result($id, $full_name, $phone, $hash, $hostel_type, $specialization, $status);
                 $stmt->fetch();
-                if (password_verify($password, $hash)) {
+
+                if ($status === 'pending') {
+                    $error = 'Your account is pending admin approval.';
+                    log_security_action('login_attempt_pending', $username);
+                } elseif ($status === 'suspended') {
+                    $error = 'Your account has been suspended. Please contact admin.';
+                    log_security_action('login_attempt_suspended', $username);
+                } elseif (password_verify($password, $hash)) {
                     $_SESSION['user_id'] = $id;
                     $_SESSION['role'] = $role;
                     $_SESSION['full_name'] = $full_name;
                     $_SESSION['phone'] = $phone;
+                    $_SESSION['status'] = $status;
                     if ($role === 'student') {
                         $_SESSION['hostel_type'] = $hostel_type;
                     }
                     if ($role === 'outsourced_vendor') {
                         $_SESSION['specialization'] = $specialization;
                     }
+
+                    log_security_action('login_success', $username);
+
                     if ($role === 'superadmin')
                         redirect('../superadmin/dashboard.php');
                     elseif ($role === 'technician')
@@ -48,9 +62,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         redirect('../user/dashboard.php');
                 } else {
                     $error = 'Invalid credentials.';
+                    log_security_action('login_failed_password', $username);
                 }
             } else {
                 $error = 'Invalid credentials.';
+                log_security_action('login_failed_username', $username);
             }
             $stmt->close();
         }
