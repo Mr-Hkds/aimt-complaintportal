@@ -1,4 +1,5 @@
 <?php
+require_once 'includes/config.php';
 if (isset($_SERVER['PATH_INFO']) && $_SERVER['PATH_INFO'] !== '/') {
     header('Location: error.php?code=404');
     exit;
@@ -11,7 +12,7 @@ if (isset($_SERVER['PATH_INFO']) && $_SERVER['PATH_INFO'] !== '/') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AIMT - Complaint Management Portal</title>
-    <link rel="icon" type="image/png" href="assets/images/aimt-logo.png">
+    <link rel="icon" type="image/png" href="<?= BASE_URL ?>assets/images/aimt-logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
@@ -255,7 +256,8 @@ if (isset($_SERVER['PATH_INFO']) && $_SERVER['PATH_INFO'] !== '/') {
     <footer class="bg-slate-900 text-white py-8">
         <div class="container mx-auto px-4">
             <div class="text-center">
-                <img src="assets/images/aimt-logo.png" alt="AIMT Logo" class="w-20 h-20 mx-auto mb-4 logo-glow"
+                <img src="<?= BASE_URL ?>assets/images/aimt-logo.png" alt="AIMT Logo"
+                    class="w-20 h-20 mx-auto mb-4 logo-glow"
                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                 <div class="logo-fallback large w-20 h-20 mx-auto mb-4">AIMT</div>
                 <h2 class="text-xl font-semibold mb-2">Army Institute of Management & Technology</h2>
