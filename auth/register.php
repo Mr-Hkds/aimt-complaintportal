@@ -419,7 +419,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
     <div class="register-container">
         <div class="register-header">
-            <img src="assets/images/aimt-logo.png" alt="AIMT Logo">
+            <img src="../assets/images/aimt-logo.png" alt="AIMT Logo">
             <h1>Create Account</h1>
             <p>Join the AIMT Complaint Portal</p>
         </div>
@@ -444,7 +444,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="form-group">
                 <label for="email">Campus Email</label>
                 <input type="email" id="email" name="email" required
-                    value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" placeholder="example@<?= CAMPUS_EMAIL_DOMAIN ?>">
+                    value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
+                    placeholder="example@<?= CAMPUS_EMAIL_DOMAIN ?>">
                 <span id="email-status" style="font-size:0.85em;display:block;margin-top:0.25em;"></span>
             </div>
 

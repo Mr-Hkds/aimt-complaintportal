@@ -96,7 +96,7 @@ if (!empty($token)) {
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="preload" href="assets/images/aimt-logo.png" as="image">
+    <link rel="preload" href="../assets/images/aimt-logo.png" as="image">
 
     <script>
         // Prevent flash of unstyled content
@@ -114,7 +114,7 @@ if (!empty($token)) {
     <div class="app-container">
         <header class="header">
             <div class="header-left">
-                <img src="assets/images/aimt-logo.png" alt="AIMT Logo" class="logo">
+                <img src="../assets/images/aimt-logo.png" alt="AIMT Logo" class="logo">
                 <div class="header-titles">
                     <div class="header-title">QR Scanner</div>
                     <div class="header-subtitle">Technician Portal</div>

@@ -319,7 +319,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
     <div class="forgot-container">
         <div class="forgot-header">
-            <img src="assets/images/aimt-logo.png" alt="AIMT Logo">
+            <img src="../assets/images/aimt-logo.png" alt="AIMT Logo">
             <h1>Forgot Password</h1>
             <p>Enter your username and registered mobile number to reset your password.</p>
         </div>
