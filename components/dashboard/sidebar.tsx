@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, PlusCircle, ListChecks, Settings, LogOut } from "lucide-react"
+import { LayoutDashboard, PlusCircle, ListChecks, Settings, LogOut, Users } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -47,6 +47,12 @@ const sidebarItems = [
         href: "/dashboard/tickets/create",
         icon: PlusCircle,
         roles: ["student", "faculty"],
+    },
+    {
+        title: "Manage Users",
+        href: "/dashboard/manage-users",
+        icon: Users,
+        roles: ["superadmin"],
     },
     {
         title: "Settings",

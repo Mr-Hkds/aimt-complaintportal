@@ -5,29 +5,21 @@ import { signup } from "../actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, UserPlus, ShieldCheck, GraduationCap, BookOpen, ChevronDown } from "lucide-react"
+import { Loader2, UserPlus, GraduationCap, BookOpen } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 
-const STUDENT_PATTERN = /^[a-z]{2,5}\d{4}_[a-z0-9._]+@aimt\.ac\.in$/i
-const FACULTY_PATTERN = /^[a-z][a-z.]+@aimt\.ac\.in$/i
+const STUDENT_PATTERN = /^[a-z]{2,10}\d{4}_[a-z0-9._]+@aimt\.ac\.in$/i
 const DOMAIN = '@aimt.ac.in'
-
-function detectRole(email: string): { role: string; label: string; icon: typeof GraduationCap; color: string } | null {
-    if (!email || !email.toLowerCase().endsWith(DOMAIN)) return null
-    if (STUDENT_PATTERN.test(email)) return { role: 'student', label: 'Student', icon: GraduationCap, color: 'text-blue-600 bg-blue-50 border-blue-200' }
-    if (FACULTY_PATTERN.test(email)) return { role: 'faculty', label: 'Faculty', icon: BookOpen, color: 'text-violet-600 bg-violet-50 border-violet-200' }
-    return null
-}
 
 export default function RegisterPage() {
     const [loading, setLoading] = useState(false)
     const [email, setEmail] = useState("")
-    const [showInviteCode, setShowInviteCode] = useState(false)
 
-    const detected = useMemo(() => detectRole(email), [email])
+    const isStudent = useMemo(() => STUDENT_PATTERN.test(email), [email])
     const isValidDomain = email.toLowerCase().endsWith(DOMAIN)
-    const showDomainError = email.length > 3 && !email.toLowerCase().endsWith(DOMAIN) && email.includes('@')
+    const showDomainError = email.length > 3 && !isValidDomain && email.includes('@')
+    const showRoleBadge = isValidDomain && email.length > 12
 
     async function handleSubmit(formData: FormData) {
         setLoading(true)
@@ -46,13 +38,15 @@ export default function RegisterPage() {
             return
         }
 
-        const result = await signup(formData)
-        setLoading(false)
-
-        if (result?.error) {
-            toast.error(result.error)
-        } else if (result?.success) {
-            toast.success(result.success)
+        try {
+            const result = await signup(formData)
+            if (result?.error) {
+                toast.error(result.error)
+            }
+        } catch {
+            // redirect throws, which is expected on success
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -63,7 +57,7 @@ export default function RegisterPage() {
                     Create Account
                 </h1>
                 <p className="text-sm text-slate-500 mt-1">
-                    Use your official AIMT email to register
+                    Use your official AIMT email to get started
                 </p>
             </div>
 
@@ -98,18 +92,11 @@ export default function RegisterPage() {
                     {showDomainError && (
                         <p className="text-xs text-red-500 mt-1">Only @aimt.ac.in emails are allowed</p>
                     )}
-
-                    {/* Auto-detected role badge */}
-                    {detected && (
-                        <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium mt-2 ${detected.color}`}>
-                            <detected.icon className="w-3.5 h-3.5" />
-                            Registering as: {detected.label}
+                    {showRoleBadge && (
+                        <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium mt-2 ${isStudent ? 'text-blue-600 bg-blue-50 border-blue-200' : 'text-violet-600 bg-violet-50 border-violet-200'}`}>
+                            {isStudent ? <GraduationCap className="w-3.5 h-3.5" /> : <BookOpen className="w-3.5 h-3.5" />}
+                            Registering as: {isStudent ? 'Student' : 'Faculty'}
                         </div>
-                    )}
-                    {isValidDomain && !detected && email.length > 12 && (
-                        <p className="text-xs text-amber-600 mt-1">
-                            Email format not recognized. Use an invite code if you are staff.
-                        </p>
                     )}
                 </div>
 
@@ -140,34 +127,6 @@ export default function RegisterPage() {
                             className="h-11 px-4 bg-white border-slate-200 text-[#0c1b3a] focus:border-[#c8a951] focus:ring-[#c8a951]/20 rounded-lg"
                         />
                     </div>
-                </div>
-
-                {/* Invite Code (collapsible) */}
-                <div className="border border-slate-200 rounded-lg overflow-hidden">
-                    <button
-                        type="button"
-                        onClick={() => setShowInviteCode(!showInviteCode)}
-                        className="w-full flex items-center justify-between px-4 py-3 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
-                    >
-                        <span className="flex items-center gap-2">
-                            <ShieldCheck className="w-4 h-4 text-[#c8a951]" />
-                            Have an invite code? (Staff only)
-                        </span>
-                        <ChevronDown className={`w-4 h-4 transition-transform ${showInviteCode ? 'rotate-180' : ''}`} />
-                    </button>
-                    {showInviteCode && (
-                        <div className="px-4 pb-4">
-                            <Input
-                                id="inviteCode"
-                                name="inviteCode"
-                                placeholder="e.g. TECH-A7X9"
-                                className="h-11 px-4 bg-white border-slate-200 text-[#0c1b3a] placeholder:text-slate-400 focus:border-[#c8a951] focus:ring-[#c8a951]/20 rounded-lg uppercase tracking-wider font-mono"
-                            />
-                            <p className="text-xs text-slate-400 mt-2">
-                                Technicians and administrators receive this from a superadmin.
-                            </p>
-                        </div>
-                    )}
                 </div>
 
                 <Button
