@@ -1,87 +1,113 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Plus, Wifi, Utensils, Droplets, Zap } from "lucide-react"
+import { Plus, Wifi, Utensils, Droplets, Zap, ClipboardCheck, Clock, AlertTriangle } from "lucide-react"
 import Link from "next/link"
 
 export default function DashboardPage() {
-    // TODO: Fetch user profile and stats here
-    const userName = "Student" // Placeholder
-
     return (
         <div className="space-y-8">
+            {/* Page Header */}
             <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+                <div>
+                    <h2 className="text-2xl font-bold tracking-tight text-[#0c1b3a]">
+                        Dashboard
+                    </h2>
+                    <p className="text-sm text-slate-500 mt-1">
+                        Overview of your complaints and campus issues
+                    </p>
+                </div>
                 <Link href="/dashboard/tickets/create">
-                    <Button className="bg-blue-600 hover:bg-blue-500">
+                    <Button className="bg-[#0c1b3a] hover:bg-[#1a2d5a] text-white active:scale-95 transition-all">
                         <Plus className="mr-2 h-4 w-4" /> New Complaint
                     </Button>
                 </Link>
             </div>
 
+            {/* Quick Stats */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {/* Quick Stats */}
-                <Card className="glass-card border-none bg-black/40 text-white">
+                <Card className="college-card border-l-4 border-l-[#0c1b3a]">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Tickets</CardTitle>
-                        <Zap className="h-4 w-4 text-yellow-400" />
+                        <CardTitle className="text-sm font-medium text-slate-600">
+                            Total Tickets
+                        </CardTitle>
+                        <ClipboardCheck className="h-4 w-4 text-[#0c1b3a]" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">0</div>
-                        <p className="text-xs text-gray-400">+0 from last month</p>
+                        <div className="text-2xl font-bold text-[#0c1b3a]">0</div>
+                        <p className="text-xs text-slate-400 mt-1">+0 from last month</p>
                     </CardContent>
                 </Card>
-                <Card className="glass-card border-none bg-black/40 text-white">
+
+                <Card className="college-card border-l-4 border-l-amber-500">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Pending</CardTitle>
-                        <div className="h-4 w-4 rounded-full bg-red-500/20 p-0.5">
-                            <div className="w-full h-full rounded-full bg-red-500 animate-pulse" />
-                        </div>
+                        <CardTitle className="text-sm font-medium text-slate-600">
+                            Pending
+                        </CardTitle>
+                        <Clock className="h-4 w-4 text-amber-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">0</div>
-                        <p className="text-xs text-gray-400">Needs attention</p>
+                        <div className="text-2xl font-bold text-[#0c1b3a]">0</div>
+                        <p className="text-xs text-slate-400 mt-1">Awaiting action</p>
                     </CardContent>
                 </Card>
-                <Card className="glass-card border-none bg-black/40 text-white">
+
+                <Card className="college-card border-l-4 border-l-emerald-500">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Resolved</CardTitle>
-                        <div className="h-4 w-4 text-emerald-400">✓</div>
+                        <CardTitle className="text-sm font-medium text-slate-600">
+                            Resolved
+                        </CardTitle>
+                        <ClipboardCheck className="h-4 w-4 text-emerald-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">0</div>
-                        <p className="text-xs text-gray-400">Fixed issues</p>
+                        <div className="text-2xl font-bold text-[#0c1b3a]">0</div>
+                        <p className="text-xs text-slate-400 mt-1">Issues fixed</p>
                     </CardContent>
                 </Card>
-                <Card className="glass-card border-none bg-black/40 text-white">
-                    {/* Placeholder for now */}
+
+                <Card className="college-card border-l-4 border-l-[#c8a951]">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Hostel</CardTitle>
-                        <div className="text-xs text-gray-400">Not Set</div>
+                        <CardTitle className="text-sm font-medium text-slate-600">
+                            Hostel
+                        </CardTitle>
+                        <AlertTriangle className="h-4 w-4 text-[#c8a951]" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-sm text-gray-300">Update Profile</div>
+                        <div className="text-sm font-medium text-slate-400">Not Set</div>
+                        <Link href="/dashboard/settings">
+                            <p className="text-xs text-[#c8a951] hover:underline mt-1 cursor-pointer">
+                                Update Profile →
+                            </p>
+                        </Link>
                     </CardContent>
                 </Card>
             </div>
 
             {/* Quick Actions */}
             <div>
-                <h3 className="text-lg font-medium mb-4 text-gray-200">Quick Report</h3>
+                <h3 className="text-base font-semibold text-[#0c1b3a] mb-4">
+                    Quick Report
+                </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
-                        { label: "WiFi Issue", icon: Wifi, color: "text-blue-400", bg: "bg-blue-500/10" },
-                        { label: "Mess Food", icon: Utensils, color: "text-orange-400", bg: "bg-orange-500/10" },
-                        { label: "Water/Plumbing", icon: Droplets, color: "text-cyan-400", bg: "bg-cyan-500/10" },
-                        { label: "Electricity", icon: Zap, color: "text-yellow-400", bg: "bg-yellow-500/10" },
+                        { label: "WiFi Issue", icon: Wifi, color: "text-blue-600", bg: "bg-blue-50", hoverBg: "hover:bg-blue-100" },
+                        { label: "Mess Food", icon: Utensils, color: "text-orange-600", bg: "bg-orange-50", hoverBg: "hover:bg-orange-100" },
+                        { label: "Water/Plumbing", icon: Droplets, color: "text-cyan-600", bg: "bg-cyan-50", hoverBg: "hover:bg-cyan-100" },
+                        { label: "Electricity", icon: Zap, color: "text-amber-600", bg: "bg-amber-50", hoverBg: "hover:bg-amber-100" },
                     ].map((action, i) => (
-                        <button key={i} className={`p-6 rounded-xl border border-white/5 hover:border-white/20 transition-all hover:scale-105 flex flex-col items-center justify-center gap-3 bg-black/20 backdrop-blur-sm group`}>
-                            <div className={`p-3 rounded-full ${action.bg} ${action.color} group-hover:ring-2 ring-white/10 transition-all`}>
-                                <action.icon className="w-6 h-6" />
-                            </div>
-                            <span className="font-medium text-gray-300">{action.label}</span>
-                        </button>
+                        <Link href="/dashboard/tickets/create" key={i}>
+                            <button
+                                className={`w-full p-6 rounded-xl border border-slate-200 ${action.hoverBg} transition-all hover:shadow-md hover:-translate-y-0.5 active:scale-95 flex flex-col items-center justify-center gap-3 bg-white group`}
+                            >
+                                <div className={`p-3 rounded-xl ${action.bg} ${action.color} transition-all`}>
+                                    <action.icon className="w-6 h-6" />
+                                </div>
+                                <span className="font-medium text-sm text-slate-700">
+                                    {action.label}
+                                </span>
+                            </button>
+                        </Link>
                     ))}
                 </div>
             </div>

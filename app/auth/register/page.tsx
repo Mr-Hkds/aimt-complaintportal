@@ -5,8 +5,7 @@ import { signup } from "../actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2 } from "lucide-react"
+import { Loader2, UserPlus } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 
@@ -35,74 +34,96 @@ export default function RegisterPage() {
     }
 
     return (
-        <Card className="glass-card border-none text-white bg-black/40">
-            <CardHeader>
-                <CardTitle className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400">
+        <div>
+            <div className="mb-8">
+                <h1 className="text-2xl font-bold text-[#0c1b3a] tracking-tight">
                     Create Account
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                    Join the portal to efficiently manage campus issues
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <form action={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="fullName">Full Name</Label>
-                        <Input
-                            id="fullName"
-                            name="fullName"
-                            placeholder="John Doe"
-                            required
-                            className="bg-white/5 border-white/10 text-white focus:border-emerald-500/50 focus:ring-emerald-500/50"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="email">Email Address</Label>
-                        <Input
-                            id="email"
-                            name="email"
-                            type="email"
-                            placeholder="student@aimt.edu.in"
-                            required
-                            className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-emerald-500/50 focus:ring-emerald-500/50"
-                        />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="password">Password</Label>
-                            <Input
-                                id="password"
-                                name="password"
-                                type="password"
-                                required
-                                className="bg-white/5 border-white/10 text-white focus:border-emerald-500/50 focus:ring-emerald-500/50"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="confirmPassword">Confirm</Label>
-                            <Input
-                                id="confirmPassword"
-                                name="confirmPassword"
-                                type="password"
-                                required
-                                className="bg-white/5 border-white/10 text-white focus:border-emerald-500/50 focus:ring-emerald-500/50"
-                            />
-                        </div>
-                    </div>
+                </h1>
+                <p className="text-sm text-slate-500 mt-1">
+                    Join the portal to report and track campus issues
+                </p>
+            </div>
 
-                    <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white" disabled={loading}>
-                        {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Sign Up"}
-                    </Button>
-                </form>
-            </CardContent>
-            <CardFooter className="justify-center">
-                <p className="text-sm text-gray-400">
+            <form action={handleSubmit} className="space-y-5">
+                <div className="space-y-2">
+                    <Label htmlFor="fullName" className="text-sm font-medium text-slate-700">
+                        Full Name
+                    </Label>
+                    <Input
+                        id="fullName"
+                        name="fullName"
+                        placeholder="Your full name"
+                        required
+                        className="h-11 px-4 bg-white border-slate-200 text-[#0c1b3a] placeholder:text-slate-400 focus:border-[#c8a951] focus:ring-[#c8a951]/20 rounded-lg"
+                    />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="email" className="text-sm font-medium text-slate-700">
+                        Email Address
+                    </Label>
+                    <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        placeholder="student@aimt.edu.in"
+                        required
+                        className="h-11 px-4 bg-white border-slate-200 text-[#0c1b3a] placeholder:text-slate-400 focus:border-[#c8a951] focus:ring-[#c8a951]/20 rounded-lg"
+                    />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="password" className="text-sm font-medium text-slate-700">
+                            Password
+                        </Label>
+                        <Input
+                            id="password"
+                            name="password"
+                            type="password"
+                            required
+                            className="h-11 px-4 bg-white border-slate-200 text-[#0c1b3a] focus:border-[#c8a951] focus:ring-[#c8a951]/20 rounded-lg"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="confirmPassword" className="text-sm font-medium text-slate-700">
+                            Confirm
+                        </Label>
+                        <Input
+                            id="confirmPassword"
+                            name="confirmPassword"
+                            type="password"
+                            required
+                            className="h-11 px-4 bg-white border-slate-200 text-[#0c1b3a] focus:border-[#c8a951] focus:ring-[#c8a951]/20 rounded-lg"
+                        />
+                    </div>
+                </div>
+
+                <Button
+                    type="submit"
+                    className="w-full h-11 bg-[#0c1b3a] hover:bg-[#1a2d5a] text-white font-medium rounded-lg transition-colors active:scale-[0.98]"
+                    disabled={loading}
+                >
+                    {loading ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <>
+                            <UserPlus className="mr-2 h-4 w-4" />
+                            Create Account
+                        </>
+                    )}
+                </Button>
+            </form>
+
+            <div className="mt-6 text-center">
+                <p className="text-sm text-slate-500">
                     Already have an account?{" "}
-                    <Link href="/auth/login" className="text-emerald-400 hover:underline">
+                    <Link
+                        href="/auth/login"
+                        className="text-[#0c1b3a] font-medium hover:text-[#c8a951] transition-colors"
+                    >
                         Sign in
                     </Link>
                 </p>
-            </CardFooter>
-        </Card>
+            </div>
+        </div>
     )
 }

@@ -5,8 +5,7 @@ import { login } from "../actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2 } from "lucide-react"
+import { Loader2, LogIn } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 
@@ -24,52 +23,72 @@ export default function LoginPage() {
     }
 
     return (
-        <Card className="glass-card border-none text-white bg-black/40">
-            <CardHeader>
-                <CardTitle className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
+        <div>
+            <div className="mb-8">
+                <h1 className="text-2xl font-bold text-[#0c1b3a] tracking-tight">
                     Welcome Back
-                </CardTitle>
-                <CardDescription className="text-gray-400">
+                </h1>
+                <p className="text-sm text-slate-500 mt-1">
                     Enter your credentials to access your dashboard
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <form action={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                            id="email"
-                            name="email"
-                            type="email"
-                            placeholder="student@aimt.edu.in"
-                            required
-                            className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-blue-500/50 focus:ring-blue-500/50"
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="password">Password</Label>
-                        <Input
-                            id="password"
-                            name="password"
-                            type="password"
-                            required
-                            className="bg-white/5 border-white/10 text-white focus:border-blue-500/50 focus:ring-blue-500/50"
-                        />
-                    </div>
+                </p>
+            </div>
 
-                    <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white" disabled={loading}>
-                        {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Sign In"}
-                    </Button>
-                </form>
-            </CardContent>
-            <CardFooter className="justify-center">
-                <p className="text-sm text-gray-400">
-                    Don't have an account?{" "}
-                    <Link href="/auth/register" className="text-blue-400 hover:underline">
+            <form action={handleSubmit} className="space-y-5">
+                <div className="space-y-2">
+                    <Label htmlFor="email" className="text-sm font-medium text-slate-700">
+                        Email Address
+                    </Label>
+                    <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        placeholder="student@aimt.edu.in"
+                        required
+                        className="h-11 px-4 bg-white border-slate-200 text-[#0c1b3a] placeholder:text-slate-400 focus:border-[#c8a951] focus:ring-[#c8a951]/20 rounded-lg"
+                    />
+                </div>
+                <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="password" className="text-sm font-medium text-slate-700">
+                            Password
+                        </Label>
+                    </div>
+                    <Input
+                        id="password"
+                        name="password"
+                        type="password"
+                        required
+                        className="h-11 px-4 bg-white border-slate-200 text-[#0c1b3a] focus:border-[#c8a951] focus:ring-[#c8a951]/20 rounded-lg"
+                    />
+                </div>
+
+                <Button
+                    type="submit"
+                    className="w-full h-11 bg-[#0c1b3a] hover:bg-[#1a2d5a] text-white font-medium rounded-lg transition-colors active:scale-[0.98]"
+                    disabled={loading}
+                >
+                    {loading ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <>
+                            <LogIn className="mr-2 h-4 w-4" />
+                            Sign In
+                        </>
+                    )}
+                </Button>
+            </form>
+
+            <div className="mt-6 text-center">
+                <p className="text-sm text-slate-500">
+                    Don&apos;t have an account?{" "}
+                    <Link
+                        href="/auth/register"
+                        className="text-[#0c1b3a] font-medium hover:text-[#c8a951] transition-colors"
+                    >
                         Register here
                     </Link>
                 </p>
-            </CardFooter>
-        </Card>
+            </div>
+        </div>
     )
 }

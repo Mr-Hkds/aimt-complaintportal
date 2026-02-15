@@ -9,8 +9,8 @@ import React from "react";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Army Institute of Management and Technology",
-  description: "Next-gen complaint management for AIMT.",
+  title: "AIMT Complaint Portal — Army Institute of Management & Technology",
+  description: "Official student complaint and resolution platform for Army Institute of Management & Technology, Greater Noida. Report campus infrastructure issues, track status, and receive timely resolutions.",
   icons: {
     icon: '/favicon.ico',
   },
@@ -26,7 +26,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="light"
           enableSystem
           disableTransitionOnChange
         >
