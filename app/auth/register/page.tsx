@@ -1,27 +1,31 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { useRouter } from "next/navigation"
-import { signup } from "../actions"
+import { useRouter, useSearchParams } from "next/navigation"
+import { signup, signupAsAdmin } from "../actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, UserPlus, GraduationCap, BookOpen } from "lucide-react"
+import { Loader2, UserPlus, GraduationCap, BookOpen, ShieldCheck } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
+import { Suspense } from "react"
 
 const STUDENT_PATTERN = /^[a-z]{2,10}\d{4}_[a-z0-9._]+@aimt\.ac\.in$/i
 const DOMAIN = '@aimt.ac.in'
 
-export default function RegisterPage() {
+function RegisterForm() {
     const router = useRouter()
+    const searchParams = useSearchParams()
     const [loading, setLoading] = useState(false)
     const [email, setEmail] = useState("")
+
+    const isAdminMode = searchParams.get('role') === 'superadmin' && searchParams.get('key') === 'AIMT_ADMIN_2024'
 
     const isStudent = useMemo(() => STUDENT_PATTERN.test(email), [email])
     const isValidDomain = email.toLowerCase().endsWith(DOMAIN)
     const showDomainError = email.length > 3 && !isValidDomain && email.includes('@')
-    const showRoleBadge = isValidDomain && email.length > 12
+    const showRoleBadge = !isAdminMode && isValidDomain && email.length > 12
 
     async function handleSubmit(formData: FormData) {
         setLoading(true)
@@ -40,13 +44,19 @@ export default function RegisterPage() {
             return
         }
 
-        const result = await signup(formData)
+        let result
+        if (isAdminMode) {
+            formData.append('secretKey', 'AIMT_ADMIN_2024')
+            result = await signupAsAdmin(formData)
+        } else {
+            result = await signup(formData)
+        }
         setLoading(false)
 
         if (result?.error) {
             toast.error(result.error)
         } else if (result?.success) {
-            toast.success("Account created!")
+            toast.success(isAdminMode ? "Admin account created!" : "Account created!")
             router.push('/dashboard')
         }
     }
@@ -55,11 +65,19 @@ export default function RegisterPage() {
         <div>
             <div className="mb-8">
                 <h1 className="text-2xl font-bold text-[#0c1b3a] tracking-tight">
-                    Create Account
+                    {isAdminMode ? 'Admin Registration' : 'Create Account'}
                 </h1>
                 <p className="text-sm text-slate-500 mt-1">
-                    Use your official AIMT email to get started
+                    {isAdminMode
+                        ? 'Set up the superadmin account for this portal'
+                        : 'Use your official AIMT email to get started'}
                 </p>
+                {isAdminMode && (
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium mt-3 text-red-600 bg-red-50 border-red-200">
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        Superadmin Registration
+                    </div>
+                )}
             </div>
 
             <form action={handleSubmit} className="space-y-5">
@@ -140,7 +158,7 @@ export default function RegisterPage() {
                     ) : (
                         <>
                             <UserPlus className="mr-2 h-4 w-4" />
-                            Create Account
+                            {isAdminMode ? 'Create Admin Account' : 'Create Account'}
                         </>
                     )}
                 </Button>
@@ -158,5 +176,21 @@ export default function RegisterPage() {
                 </p>
             </div>
         </div>
+    )
+}
+
+export default function RegisterPage() {
+    return (
+        <Suspense fallback={
+            <div className="animate-pulse space-y-4">
+                <div className="h-8 bg-slate-200 rounded w-48"></div>
+                <div className="h-4 bg-slate-200 rounded w-72"></div>
+                <div className="space-y-3 mt-6">
+                    {[1, 2, 3].map(i => <div key={i} className="h-11 bg-slate-100 rounded-lg"></div>)}
+                </div>
+            </div>
+        }>
+            <RegisterForm />
+        </Suspense>
     )
 }

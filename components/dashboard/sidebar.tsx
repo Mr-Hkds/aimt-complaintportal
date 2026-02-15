@@ -5,7 +5,10 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, PlusCircle, ListChecks, Settings, LogOut, Users } from "lucide-react"
+import {
+    LayoutDashboard, PlusCircle, ListChecks, Settings, LogOut,
+    Users, QrCode, Building, Lightbulb, Wrench, Menu, X
+} from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -19,16 +22,22 @@ const sidebarItems = [
         roles: ["student", "faculty", "technician", "admin", "superadmin"],
     },
     {
-        title: "Staff Management",
-        href: "/dashboard/staff",
+        title: "New Complaint",
+        href: "/dashboard/tickets/create",
         icon: PlusCircle,
-        roles: ["admin", "superadmin"],
+        roles: ["student", "faculty"],
     },
     {
         title: "My Tickets",
         href: "/dashboard/tickets",
         icon: ListChecks,
         roles: ["student", "faculty"],
+    },
+    {
+        title: "QR Scanner",
+        href: "/dashboard/scanner",
+        icon: QrCode,
+        roles: ["technician"],
     },
     {
         title: "Assigned Jobs",
@@ -43,16 +52,34 @@ const sidebarItems = [
         roles: ["admin", "superadmin"],
     },
     {
-        title: "New Complaint",
-        href: "/dashboard/tickets/create",
-        icon: PlusCircle,
-        roles: ["student", "faculty"],
+        title: "Staff Management",
+        href: "/dashboard/staff",
+        icon: Wrench,
+        roles: ["admin", "superadmin"],
+    },
+    {
+        title: "Hostel Issues",
+        href: "/dashboard/hostel-issues",
+        icon: Building,
+        roles: ["student", "faculty", "admin", "superadmin"],
+    },
+    {
+        title: "Suggestions",
+        href: "/dashboard/suggestions",
+        icon: Lightbulb,
+        roles: ["student", "faculty", "admin", "superadmin"],
     },
     {
         title: "Manage Users",
         href: "/dashboard/manage-users",
         icon: Users,
         roles: ["superadmin"],
+    },
+    {
+        title: "QR Lookup",
+        href: "/dashboard/scanner",
+        icon: QrCode,
+        roles: ["admin", "superadmin"],
     },
     {
         title: "Settings",
@@ -67,6 +94,7 @@ export function Sidebar() {
     const router = useRouter()
     const supabase = createClient()
     const [userRole, setUserRole] = useState<string | null>(null)
+    const [mobileOpen, setMobileOpen] = useState(false)
 
     useEffect(() => {
         const fetchUserRole = async () => {
@@ -101,11 +129,11 @@ export function Sidebar() {
         !userRole || item.roles.includes(userRole)
     )
 
-    return (
-        <div className="pb-12 w-64 nav-sidebar min-h-screen hidden md:flex md:flex-col border-r border-[#1a2d5a]">
+    const navContent = (
+        <>
             {/* Logo */}
             <div className="px-5 py-5 border-b border-[#1a2d5a]">
-                <Link href="/dashboard" className="flex items-center gap-3 group">
+                <Link href="/dashboard" className="flex items-center gap-3 group" onClick={() => setMobileOpen(false)}>
                     <div className="bg-white rounded-full p-1 shadow-sm border border-slate-200">
                         <Image src="/logo.png" alt="AIMT Crest" width={36} height={36} className="w-9 h-9 object-contain group-hover:scale-105 transition-transform" />
                     </div>
@@ -121,15 +149,17 @@ export function Sidebar() {
             </div>
 
             {/* Navigation */}
-            <div className="flex-1 py-4">
+            <div className="flex-1 py-4 overflow-y-auto">
                 <nav className="grid items-start gap-1 px-3">
                     {filteredItems.map((item, index) => {
                         const Icon = item.icon
-                        const isActive = pathname === item.href
+                        const isActive = pathname === item.href ||
+                            (item.href !== '/dashboard' && pathname.startsWith(item.href))
                         return (
                             <Link
                                 key={index}
                                 href={item.href}
+                                onClick={() => setMobileOpen(false)}
                             >
                                 <span
                                     className={cn(
@@ -151,8 +181,19 @@ export function Sidebar() {
                 </nav>
             </div>
 
-            {/* Sign Out */}
-            <div className="px-3 pb-4">
+            {/* Role Badge + Sign Out */}
+            <div className="px-3 pb-4 space-y-2">
+                {userRole && (
+                    <div className="px-3 py-2">
+                        <span className={`text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full ${userRole === 'superadmin' ? 'bg-red-900/30 text-red-300' :
+                                userRole === 'admin' ? 'bg-emerald-900/30 text-emerald-300' :
+                                    userRole === 'technician' ? 'bg-amber-900/30 text-amber-300' :
+                                        'bg-slate-700/50 text-slate-400'
+                            }`}>
+                            {userRole}
+                        </span>
+                    </div>
+                )}
                 <Button
                     variant="ghost"
                     className="w-full justify-start text-slate-500 hover:text-red-400 hover:bg-red-900/10 rounded-lg text-sm"
@@ -162,6 +203,44 @@ export function Sidebar() {
                     Sign Out
                 </Button>
             </div>
-        </div>
+        </>
+    )
+
+    return (
+        <>
+            {/* Mobile header */}
+            <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-[#0c1b3a] border-b border-[#1a2d5a] px-4 py-3 flex items-center justify-between">
+                <Link href="/dashboard" className="flex items-center gap-2">
+                    <div className="bg-white rounded-full p-0.5">
+                        <Image src="/logo.png" alt="AIMT" width={28} height={28} className="w-7 h-7 object-contain" />
+                    </div>
+                    <span className="text-white text-sm font-semibold">AIMT Portal</span>
+                </Link>
+                <button
+                    onClick={() => setMobileOpen(!mobileOpen)}
+                    className="text-white p-1.5"
+                >
+                    {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                </button>
+            </div>
+
+            {/* Mobile overlay */}
+            {mobileOpen && (
+                <div className="md:hidden fixed inset-0 z-40 bg-black/50" onClick={() => setMobileOpen(false)} />
+            )}
+
+            {/* Mobile sidebar drawer */}
+            <div className={cn(
+                "md:hidden fixed top-0 left-0 z-50 w-64 h-full nav-sidebar flex flex-col border-r border-[#1a2d5a] transition-transform duration-200",
+                mobileOpen ? "translate-x-0" : "-translate-x-full"
+            )}>
+                {navContent}
+            </div>
+
+            {/* Desktop sidebar */}
+            <div className="pb-12 w-64 nav-sidebar min-h-screen hidden md:flex md:flex-col border-r border-[#1a2d5a]">
+                {navContent}
+            </div>
+        </>
     )
 }
