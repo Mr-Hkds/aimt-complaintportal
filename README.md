@@ -1,113 +1,36 @@
-# Complaint Portal - Production Ready
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-A comprehensive complaint management system with intelligent auto-assignment capabilities.
+## Getting Started
 
-## 🚀 Features
+First, run the development server:
 
-- **Smart Auto-Assignment**: Automatically assigns complaints to technicians every 5 minutes
-- **Real-time Monitoring**: Live system health and performance metrics
-- **Multi-role Support**: Students, Faculty, Technicians, Superadmin
-- **Hostel Issues Management**: Separate system for hostel-related complaints
-- **Priority-based Assignment**: Intelligent complaint prioritization
-- **Workload Balancing**: Distributes assignments evenly among technicians
-
-## 📋 Requirements
-
-- **PHP**: 7.4 or higher
-- **MySQL**: 5.7 or higher
-- **Web Server**: Apache, Nginx, or any PHP-compatible server
-- **Browser**: Modern browser with JavaScript enabled
-
-## 🛠️ Installation
-
-1. **Upload Files**: Upload all files to your web server
-2. **Database Setup**: Import `schema.sql` to create the database structure
-3. **Configuration**: Update `includes/config.php` with your database credentials
-4. **Access**: Navigate to the application URL
-
-## 🔧 Configuration
-
-### Database Configuration
-Edit `includes/config.php`:
-```php
-define('DB_HOST', 'localhost');
-define('DB_USER', 'your_username');
-define('DB_PASS', 'your_password');
-define('DB_NAME', 'complaint_portal');
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-### File Permissions
-Ensure the following directories are writable:
-- `logs/` (for error logging)
-- `backups/` (for database backups)
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## 👥 User Roles
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-### Students/Faculty
-- Submit complaints
-- Track complaint status
-- Vote on hostel issues and suggestions
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-### Technicians
-- View assigned complaints
-- Update complaint status
-- Mark online/offline status
+## Learn More
 
-### Superadmin
-- Manage all users
-- Monitor system health
-- View auto-assignment statistics
-- Manage suggestions
+To learn more about Next.js, take a look at the following resources:
 
-## 🔄 Auto-Assignment System
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-The system automatically:
-- Validates existing assignments every 5 minutes
-- Assigns unassigned complaints to available technicians
-- Reassigns complaints when technicians go offline
-- Balances workload among technicians
-- Prioritizes complaints based on age, category, and user role
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## 📊 System Monitoring
+## Deploy on Vercel
 
-Access system monitoring at: `superadmin/system_monitoring.php`
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Features:
-- Real-time system health score
-- Technician availability status
-- System alerts and notifications
-- Recent activity logs
-
-## 🔒 Security Features
-
-- Session-based authentication
-- Role-based access control
-- CSRF protection
-- Input sanitization
-- SQL injection prevention
-
-## 📁 File Structure
-
-```
-complaint_portal/
-├── assets/           # CSS, JS, images
-├── auth/            # Authentication files
-├── includes/        # Core PHP files
-├── superadmin/      # Superadmin interface
-├── technician/      # Technician interface
-├── user/           # User interface
-├── ajax/           # AJAX endpoints
-└── logs/           # System logs
-```
-
-## 🚨 Support
-
-For technical support or issues:
-1. Check the system monitoring dashboard
-2. Review error logs in `logs/` directory
-3. Ensure all file permissions are correct
-4. Verify database connectivity
-
-## 📄 License
-
-This project is proprietary software. All rights reserved. 
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

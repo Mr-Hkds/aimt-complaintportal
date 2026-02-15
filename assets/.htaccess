@@ -1,3 +1,0 @@
-# Allow access to all assets
-Order allow,deny
-Allow from all 

@@ -1,7 +1,0 @@
-.git
-.gitignore
-.htaccess
-backups/
-logs/
-*.md
-*.bat
