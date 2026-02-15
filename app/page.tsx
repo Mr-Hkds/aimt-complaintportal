@@ -12,11 +12,13 @@ export default function Home() {
 
       {/* Header */}
       <header className="relative z-10 container mx-auto px-6 py-6 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/10">
-            <span className="font-bold text-xl">A</span>
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-md border border-white/10 overflow-hidden">
+            <img src="/logo.png" alt="AIMT Logo" className="w-full h-full object-cover" />
           </div>
-          <span className="font-semibold text-lg tracking-tight">AIMT Portal</span>
+          <span className="font-bold text-lg md:text-xl tracking-tight text-white">
+            Army Institute of Management and Technology
+          </span>
         </div>
         <div className="flex gap-4">
           <Link href="/auth/login">
@@ -39,7 +41,7 @@ export default function Home() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
-          <span className="text-sm text-gray-300 font-medium">Bharamratri Studios Edition</span>
+          <span className="text-sm text-gray-300 font-medium">Official Campus Portal</span>
         </div>
 
         <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60">

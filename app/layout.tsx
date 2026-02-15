@@ -9,8 +9,11 @@ import React from "react";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "AIMT Complaint Portal",
+  title: "Army Institute of Management and Technology",
   description: "Next-gen complaint management for AIMT.",
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({

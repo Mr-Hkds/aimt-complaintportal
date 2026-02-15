@@ -53,7 +53,9 @@ export function Sidebar() {
             <div className="space-y-4 py-4">
                 <div className="px-4 py-2">
                     <h2 className="mb-2 px-2 text-lg font-semibold tracking-tight text-white flex items-center gap-2">
-                        <Ticket className="w-5 h-5 text-blue-400" />
+                        <div className="w-8 h-8 rounded-full overflow-hidden bg-white/10 flex items-center justify-center">
+                            <img src="/logo.png" alt="AIMT" className="w-full h-full object-cover" />
+                        </div>
                         AIMT Portal
                     </h2>
                 </div>
