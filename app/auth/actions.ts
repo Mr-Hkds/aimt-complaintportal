@@ -19,95 +19,116 @@ function detectRoleFromEmail(email: string): 'student' | 'faculty' | null {
 }
 
 export async function login(formData: FormData) {
-    const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    let isSuccess = false
+    try {
+        const cookieStore = await cookies()
+        const supabase = createClient(cookieStore)
 
-    const email = formData.get('email') as string
-    const password = formData.get('password') as string
+        const email = formData.get('email') as string
+        const password = formData.get('password') as string
 
-    // Strict domain check
-    if (!email.toLowerCase().endsWith(AIMT_DOMAIN)) {
-        return { error: 'Only @aimt.ac.in email addresses are allowed.' }
+        // Strict domain check
+        if (!email.toLowerCase().endsWith(AIMT_DOMAIN)) {
+            return { error: 'Only @aimt.ac.in email addresses are allowed.' }
+        }
+
+        const { error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+        })
+
+        if (error) {
+            return { error: error.message }
+        }
+
+        isSuccess = true
+        revalidatePath('/', 'layout')
+    } catch (err: any) {
+        // If it's a redirect error, let it bubble up
+        if (err?.digest?.includes('NEXT_REDIRECT')) throw err
+        console.error('Login error:', err)
+        return { error: err.message || 'An unexpected error occurred during login.' }
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-    })
-
-    if (error) {
-        return { error: error.message }
+    if (isSuccess) {
+        redirect('/dashboard')
     }
-
-    revalidatePath('/', 'layout')
-    redirect('/dashboard')
 }
 
 export async function signup(formData: FormData) {
-    const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    try {
+        const cookieStore = await cookies()
+        const supabase = createClient(cookieStore)
 
-    const email = formData.get('email') as string
-    const password = formData.get('password') as string
-    const fullName = formData.get('fullName') as string
-    const inviteCode = (formData.get('inviteCode') as string)?.trim() || ''
+        const email = formData.get('email') as string
+        const password = formData.get('password') as string
+        const fullName = formData.get('fullName') as string
+        const inviteCode = (formData.get('inviteCode') as string)?.trim() || ''
 
-    // 1. Strict domain check
-    if (!email.toLowerCase().endsWith(AIMT_DOMAIN)) {
-        return { error: 'Only @aimt.ac.in email addresses are allowed.' }
-    }
-
-    // 2. Detect role from email pattern
-    let role = detectRoleFromEmail(email)
-
-    // 3. If invite code provided, validate and override role
-    if (inviteCode) {
-        const { data: codeData, error: codeError } = await supabase
-            .from('invite_codes')
-            .select('id, role, used')
-            .eq('code', inviteCode.toUpperCase())
-            .single()
-
-        if (codeError || !codeData) {
-            return { error: 'Invalid invite code.' }
+        // 1. Strict domain check
+        if (!email.toLowerCase().endsWith(AIMT_DOMAIN)) {
+            return { error: 'Only @aimt.ac.in email addresses are allowed.' }
         }
 
-        if (codeData.used) {
-            return { error: 'This invite code has already been used.' }
+        // 2. Detect role from email pattern
+        let role: string | null = detectRoleFromEmail(email)
+
+        // 3. If invite code provided, validate and override role
+        if (inviteCode) {
+            const { data: codeData, error: codeError } = await supabase
+                .from('invite_codes')
+                .select('id, role, used')
+                .eq('code', inviteCode.toUpperCase())
+                .single()
+
+            if (codeError || !codeData) {
+                return { error: 'Invalid invite code.' }
+            }
+
+            if (codeData.used) {
+                return { error: 'This invite code has already been used.' }
+            }
+
+            // Override role with invite code role
+            role = codeData.role
         }
 
-        // Override role with invite code role
-        role = codeData.role as 'student' | 'faculty'
-    }
+        // 4. If still no role detected, reject
+        if (!role) {
+            return { error: 'Unable to verify your email format. Please use your official AIMT email.' }
+        }
 
-    // 4. If still no role detected, reject
-    if (!role) {
-        return { error: 'Unable to verify your email format. Please use your official AIMT email.' }
-    }
+        // 5. Create the user
+        const { data: authData, error: signupError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: {
+                    full_name: fullName,
+                    role: role,
+                }
+            }
+        })
 
-    // 5. Create the user
-    const { data: authData, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-            data: {
-                full_name: fullName,
-                role: role,
+        if (signupError) {
+            return { error: signupError.message }
+        }
+
+        // 6. If invite code was used, mark it as consumed
+        if (inviteCode && authData.user) {
+            const { error: updateError } = await supabase
+                .from('invite_codes')
+                .update({ used: true, used_by: authData.user.id })
+                .eq('code', inviteCode.toUpperCase())
+
+            if (updateError) {
+                console.error('Invite code update error:', updateError)
             }
         }
-    })
 
-    if (error) {
-        return { error: error.message }
+        return { success: 'Account created! Please check your email to verify.' }
+    } catch (err: any) {
+        console.error('Signup error:', err)
+        return { error: err.message || 'An unexpected error occurred during registration.' }
     }
-
-    // 6. If invite code was used, mark it as consumed
-    if (inviteCode && authData.user) {
-        await supabase
-            .from('invite_codes')
-            .update({ used: true, used_by: authData.user.id })
-            .eq('code', inviteCode.toUpperCase())
-    }
-
-    return { success: 'Account created! Please check your email to verify.' }
 }
