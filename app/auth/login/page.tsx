@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { login } from "../actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,6 +11,7 @@ import Link from "next/link"
 import { toast } from "sonner"
 
 export default function LoginPage() {
+    const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [email, setEmail] = useState("")
 
@@ -22,6 +24,8 @@ export default function LoginPage() {
 
         if (result?.error) {
             toast.error(result.error)
+        } else if (result?.success) {
+            router.push('/dashboard')
         }
     }
 

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import { useRouter } from "next/navigation"
 import { signup } from "../actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,6 +14,7 @@ const STUDENT_PATTERN = /^[a-z]{2,10}\d{4}_[a-z0-9._]+@aimt\.ac\.in$/i
 const DOMAIN = '@aimt.ac.in'
 
 export default function RegisterPage() {
+    const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [email, setEmail] = useState("")
 
@@ -38,15 +40,14 @@ export default function RegisterPage() {
             return
         }
 
-        try {
-            const result = await signup(formData)
-            if (result?.error) {
-                toast.error(result.error)
-            }
-        } catch {
-            // redirect throws, which is expected on success
-        } finally {
-            setLoading(false)
+        const result = await signup(formData)
+        setLoading(false)
+
+        if (result?.error) {
+            toast.error(result.error)
+        } else if (result?.success) {
+            toast.success("Account created!")
+            router.push('/dashboard')
         }
     }
 

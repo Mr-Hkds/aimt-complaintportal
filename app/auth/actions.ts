@@ -1,13 +1,9 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 
-// Only allow AIMT emails
 const AIMT_DOMAIN = '@aimt.ac.in'
-// Student pattern: course+year_name@aimt.ac.in (e.g. bba2023_rahul@aimt.ac.in)
 const STUDENT_PATTERN = /^[a-z]{2,10}\d{4}_[a-z0-9._]+@aimt\.ac\.in$/i
 
 function detectRole(email: string): 'student' | 'faculty' {
@@ -35,8 +31,7 @@ export async function login(formData: FormData) {
         return { error: error.message }
     }
 
-    revalidatePath('/', 'layout')
-    redirect('/dashboard')
+    return { success: true }
 }
 
 export async function signup(formData: FormData) {
@@ -47,15 +42,12 @@ export async function signup(formData: FormData) {
     const password = formData.get('password') as string
     const fullName = formData.get('fullName') as string
 
-    // Domain lock
     if (!email.toLowerCase().endsWith(AIMT_DOMAIN)) {
         return { error: 'Only @aimt.ac.in email addresses are allowed.' }
     }
 
-    // Auto-detect role
     const role = detectRole(email)
 
-    // Create user (email confirmation must be disabled in Supabase dashboard)
     const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -71,7 +63,5 @@ export async function signup(formData: FormData) {
         return { error: error.message }
     }
 
-    // Auto-login after signup (since email confirmation is disabled)
-    revalidatePath('/', 'layout')
-    redirect('/dashboard')
+    return { success: true }
 }
