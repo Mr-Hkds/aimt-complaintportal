@@ -1,5 +1,6 @@
 import Link from "next/link";
 import React from "react";
+import Image from "next/image";
 
 export default function AuthLayout({
     children,
@@ -12,11 +13,16 @@ export default function AuthLayout({
             <div className="hidden lg:flex lg:w-1/2 hero-section relative flex-col justify-between p-12">
                 <div className="relative z-10">
                     <Link href="/" className="flex items-center gap-3 group">
-                        <img
-                            src="/logo.png"
-                            alt="AIMT Crest"
-                            className="w-12 h-12 object-contain group-hover:scale-105 transition-transform"
-                        />
+                        <div className="bg-white rounded-full p-1 shadow-md border border-slate-200">
+                            <Image
+                                src="/logo.png"
+                                alt="AIMT Crest"
+                                width={48}
+                                height={48}
+                                className="w-12 h-12 object-contain group-hover:scale-105 transition-transform"
+                                priority
+                            />
+                        </div>
                         <div>
                             <p className="font-semibold text-white text-sm leading-tight">
                                 Army Institute of Management & Technology
@@ -51,7 +57,9 @@ export default function AuthLayout({
                 {/* Mobile header */}
                 <div className="lg:hidden absolute top-6 left-6">
                     <Link href="/" className="flex items-center gap-2">
-                        <img src="/logo.png" alt="AIMT" className="w-8 h-8 object-contain" />
+                        <div className="bg-white rounded-full p-1 shadow-sm border border-slate-200">
+                            <Image src="/logo.png" alt="AIMT Crest" width={32} height={32} className="w-8 h-8 object-contain" />
+                        </div>
                         <span className="font-semibold text-[#0c1b3a] text-sm">
                             AIMT Portal
                         </span>

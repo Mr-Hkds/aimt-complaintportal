@@ -10,11 +10,16 @@ export default function Home() {
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-3 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <img
-              src="/logo.png"
-              alt="AIMT Crest"
-              className="w-10 h-10 md:w-12 md:h-12 object-contain hover:scale-105 transition-transform cursor-pointer"
-            />
+            <div className="bg-white rounded-full p-1 shadow-sm border border-slate-200">
+              <Image
+                src="/logo.png"
+                alt="AIMT Crest"
+                width={48}
+                height={48}
+                className="w-10 h-10 md:w-12 md:h-12 object-contain hover:scale-105 transition-transform cursor-pointer"
+                priority
+              />
+            </div>
             <div className="hidden sm:block">
               <p className="font-semibold text-sm md:text-base text-[#0c1b3a] leading-tight">
                 Army Institute of Management & Technology
@@ -196,7 +201,9 @@ export default function Home() {
             {/* College Info */}
             <div>
               <div className="flex items-center gap-3 mb-4 group cursor-pointer">
-                <img src="/logo.png" alt="AIMT" className="w-10 h-10 object-contain group-hover:scale-110 transition-transform" />
+                <div className="bg-white rounded-full p-1 shadow-sm border border-slate-200">
+                  <Image src="/logo.png" alt="AIMT Crest" width={40} height={40} className="w-10 h-10 object-contain group-hover:scale-110 transition-transform" />
+                </div>
                 <div>
                   <p className="font-semibold text-white text-sm">
                     Army Institute of Management & Technology

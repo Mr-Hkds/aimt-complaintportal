@@ -11,6 +11,9 @@ import { toast } from "sonner"
 
 export default function LoginPage() {
     const [loading, setLoading] = useState(false)
+    const [email, setEmail] = useState("")
+
+    const showDomainError = email.length > 3 && !email.toLowerCase().endsWith('@aimt.ac.in') && email.includes('@')
 
     async function handleSubmit(formData: FormData) {
         setLoading(true)
@@ -29,23 +32,28 @@ export default function LoginPage() {
                     Welcome Back
                 </h1>
                 <p className="text-sm text-slate-500 mt-1">
-                    Enter your credentials to access your dashboard
+                    Sign in with your AIMT email
                 </p>
             </div>
 
             <form action={handleSubmit} className="space-y-5">
                 <div className="space-y-2">
                     <Label htmlFor="email" className="text-sm font-medium text-slate-700">
-                        Email Address
+                        Institute Email
                     </Label>
                     <Input
                         id="email"
                         name="email"
                         type="email"
-                        placeholder="student@aimt.edu.in"
+                        placeholder="yourname@aimt.ac.in"
                         required
-                        className="h-11 px-4 bg-white border-slate-200 text-[#0c1b3a] placeholder:text-slate-400 focus:border-[#c8a951] focus:ring-[#c8a951]/20 rounded-lg"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className={`h-11 px-4 bg-white border-slate-200 text-[#0c1b3a] placeholder:text-slate-400 focus:border-[#c8a951] focus:ring-[#c8a951]/20 rounded-lg ${showDomainError ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : ''}`}
                     />
+                    {showDomainError && (
+                        <p className="text-xs text-red-500 mt-1">Only @aimt.ac.in emails are allowed</p>
+                    )}
                 </div>
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -65,7 +73,7 @@ export default function LoginPage() {
                 <Button
                     type="submit"
                     className="w-full h-11 bg-[#0c1b3a] hover:bg-[#1a2d5a] text-white font-medium rounded-lg transition-colors active:scale-[0.98]"
-                    disabled={loading}
+                    disabled={loading || showDomainError}
                 >
                     {loading ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />

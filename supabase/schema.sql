@@ -6,7 +6,7 @@ create table public.profiles (
   id uuid references auth.users on delete cascade not null primary key,
   email text not null,
   full_name text,
-  role text check (role in ('student', 'faculty', 'technician', 'admin')) default 'student',
+  role text check (role in ('student', 'faculty', 'technician', 'admin', 'superadmin')) default 'student',
   hostel text, -- e.g., 'Boys Hostel 1'
   room_no text, -- e.g., '204'
   specialization text, -- for technicians (e.g., 'Electrician')
@@ -69,17 +69,17 @@ create policy "Students can create tickets." on public.tickets
 create policy "Technicians can view assigned tickets." on public.tickets
   for select using (auth.uid() = assigned_to or exists (
     select 1 from public.profiles 
-    where id = auth.uid() and role in ('technician', 'admin')
+    where id = auth.uid() and role in ('technician', 'admin', 'superadmin')
   ));
 
 create policy "Admins can view all tickets." on public.tickets
   for select using (exists (
-    select 1 from public.profiles where id = auth.uid() and role = 'admin'
+    select 1 from public.profiles where id = auth.uid() and role in ('admin', 'superadmin')
   ));
 
 create policy "Technicians/Admins can update tickets." on public.tickets
   for update using (exists (
-    select 1 from public.profiles where id = auth.uid() and role in ('technician', 'admin')
+    select 1 from public.profiles where id = auth.uid() and role in ('technician', 'admin', 'superadmin')
   ));
 
 
@@ -97,7 +97,7 @@ alter table public.comments enable row level security;
 create policy "Comments viewable by ticket participants." on public.comments
   for select using (
     exists (select 1 from public.tickets where id = ticket_id and (user_id = auth.uid() or assigned_to = auth.uid()))
-    or exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+    or exists (select 1 from public.profiles where id = auth.uid() and role in ('admin', 'superadmin'))
   );
 
 create policy "Participants can add comments." on public.comments
@@ -110,3 +110,26 @@ create policy "Participants can add comments." on public.comments
 -- STORAGE BUCKETS (You must create these in Supabase Dashboard -> Storage)
 -- bucket: 'complaint-images'
 -- policy: authenticated users can upload, public can read
+
+
+-- INVITE CODES TABLE (for technician/superadmin onboarding)
+create table public.invite_codes (
+  id uuid default uuid_generate_v4() primary key,
+  code text unique not null,
+  role text check (role in ('technician', 'superadmin')) not null,
+  used boolean default false,
+  used_by uuid references public.profiles(id),
+  created_by uuid references public.profiles(id),
+  created_at timestamptz default now()
+);
+
+alter table public.invite_codes enable row level security;
+
+create policy "Superadmins can manage invite codes." on public.invite_codes
+  for all using (
+    exists (select 1 from public.profiles where id = auth.uid() and role = 'superadmin')
+  );
+
+-- Allow anyone to validate a code during signup (select only on unused codes)
+create policy "Anyone can check unused invite codes." on public.invite_codes
+  for select using (used = false);
